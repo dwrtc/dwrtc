@@ -4,12 +4,6 @@ install: true
 jdk:
 - openjdk10
 
-addons:
-  sonarcloud:
-    organization: $SONAR_ORGANZATION
-    token:
-      secure: $SONAR_TOKEN
-
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -24,4 +18,4 @@ cache:
 script:
 - ./gradlew build
 - ./gradlew test
-- sonar-scanner
+- ./gradlew sonarqube -Dsonar.projectKey=$SONAR_KEY -Dsonar.organization=$SONAR_ORGANZATION -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN
