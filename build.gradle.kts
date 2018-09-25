@@ -10,7 +10,7 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven(url = "http://tomp2p.net/dev/mvn/")
+    maven(url = "https://tomp2p.net/dev/mvn/")
 }
 
 dependencies {
