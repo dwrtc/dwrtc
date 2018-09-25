@@ -6,7 +6,7 @@ jdk:
 
 addons:
   sonarcloud:
-    organization: github-thde
+    organization: $SONAR_ORGANZATION
     token:
       secure: $SONAR_TOKEN
 
