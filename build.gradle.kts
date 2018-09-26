@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-group = "ch.hsr.dsl.dwms"
+group = "ch.hsr.dsl.dwrtc"
 version = "1.0-SNAPSHOT"
 
 plugins {
