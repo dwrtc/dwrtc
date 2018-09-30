@@ -9,7 +9,7 @@ plugins {
 }
 
 repositories {
-    mavenCentral()
+    mavenLocal()
     jcenter()
     maven(url = "https://tomp2p.net/dev/mvn/")
 }
@@ -20,6 +20,8 @@ dependencies {
     compile("net.tomp2p:tomp2p-all:5.0-Beta8")
     compile("io.javalin:javalin:2.2.0")
     compile("org.slf4j:slf4j-simple:1.7.25")
+
+    compile("io.github.microutils:kotlin-logging:1.6.10")
 
     compile("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.+")
 
