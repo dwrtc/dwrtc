@@ -21,6 +21,8 @@ dependencies {
     compile("io.javalin:javalin:2.2.0")
     compile("org.slf4j:slf4j-simple:1.7.25")
 
+    compile("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.+")
+
     testCompile("io.kotlintest:kotlintest-runner-junit5:3.1.8")
 }
 
