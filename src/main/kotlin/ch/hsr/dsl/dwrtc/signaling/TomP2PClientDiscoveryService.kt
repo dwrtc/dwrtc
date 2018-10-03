@@ -3,34 +3,30 @@ package ch.hsr.dsl.dwrtc.signaling
 import net.tomp2p.dht.PeerBuilderDHT
 import net.tomp2p.p2p.PeerBuilder
 import net.tomp2p.peers.Number160
-import net.tomp2p.peers.PeerAddress
 import net.tomp2p.storage.Data
+import java.util.*
 
-class TomP2PClientDiscoveryService(bootrapPeerAddress: PeerAddress): ClientDiscoveryService {
-    private val peer = PeerBuilderDHT(PeerBuilder(Number160.createHash("test1")).ports(4000).start()).start()!!
+class TomP2PClientDiscoveryService : ClientDiscoveryService {
+    private val peerId = UUID.randomUUID().toString()
+    private val peer = PeerBuilderDHT(PeerBuilder(Number160.createHash(peerId)).ports(4000).start()).start()!!
 
-    init {
-        peer.peer().bootstrap().peerAddress(bootrapPeerAddress).start().awaitListeners()
+    constructor(bootstrapPeerAddress: PeerConnectionDetails) {
+        peer.peer().bootstrap().inetAddress(bootstrapPeerAddress.ip_address).ports(bootstrapPeerAddress.port).start().awaitListeners()
     }
 
     override fun registerClient(sessionId: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        peer.put(Number160.createHash(sessionId)).data(Data(peerId))
     }
 
     override fun deregisterClient(sessionId: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        peer.remove(Number160.createHash(sessionId))
     }
 
-    override fun findClient(id: String): Client {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun findClient(sessionId: String): Client {
+        val peerIdGet = peer.get(Number160.createHash(sessionId)).start().awaitUninterruptibly()
+        return if (peerIdGet.isSuccess) {
+            val peerId = peerIdGet.data().`object`().toString()
+            TomP2PClient(peer, sessionId, peerId)
+        } else throw Exception("No peer found under session ID $sessionId")
     }
-
-    fun findPeer(sessionId: String): PeerAddress = PeerAddress(peer
-            .get(Number160.createHash(sessionId))
-            .start()
-            .await()
-            .data()
-            .`object`() as ByteArray)
-
-    private fun peerAddressData(): Data = Data(peer.peerAddress().toByteArray())
 }

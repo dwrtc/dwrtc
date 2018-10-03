@@ -1,7 +1,7 @@
 package ch.hsr.dsl.dwrtc.signaling
 
 interface ClientDiscoveryService {
-    fun registerClient(id: String)
-    fun deregisterClient(id: String)
-    fun findClient(id: String): Client
+    fun registerClient(sessionId: String)
+    fun deregisterClient(sessionId: String)
+    fun findClient(sessionId: String): Client
 }
