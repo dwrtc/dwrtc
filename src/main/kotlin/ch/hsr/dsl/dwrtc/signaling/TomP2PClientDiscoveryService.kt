@@ -1,5 +1,5 @@
-import clientdiscovery.Client
-import clientdiscovery.ClientDiscoveryService
+package ch.hsr.dsl.dwrtc.signaling
+
 import net.tomp2p.dht.PeerBuilderDHT
 import net.tomp2p.p2p.PeerBuilder
 import net.tomp2p.peers.Number160
@@ -26,11 +26,11 @@ class TomP2PClientDiscoveryService(bootrapPeerAddress: PeerAddress): ClientDisco
     }
 
     fun findPeer(sessionId: String): PeerAddress = PeerAddress(peer
-        .get(Number160.createHash(sessionId))
-        .start()
-        .await()
-        .data()
-        .`object`() as ByteArray)
+            .get(Number160.createHash(sessionId))
+            .start()
+            .await()
+            .data()
+            .`object`() as ByteArray)
 
     private fun peerAddressData(): Data = Data(peer.peerAddress().toByteArray())
 }

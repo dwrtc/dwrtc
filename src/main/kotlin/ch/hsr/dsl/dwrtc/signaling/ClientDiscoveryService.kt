@@ -1,4 +1,4 @@
-package clientdiscovery
+package ch.hsr.dsl.dwrtc.signaling
 
 interface ClientDiscoveryService {
     fun registerClient(id: String)
