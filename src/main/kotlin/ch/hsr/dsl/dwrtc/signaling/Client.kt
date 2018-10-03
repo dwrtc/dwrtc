@@ -1,4 +1,4 @@
-package clientdiscovery
+package ch.hsr.dsl.dwrtc.signaling
 
 import kotlin.properties.ObservableProperty
 
