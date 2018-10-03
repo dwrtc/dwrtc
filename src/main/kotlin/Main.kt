@@ -26,8 +26,8 @@ val peer2 = PeerBuilderDHT(PeerBuilder(Number160.createHash("test2")).ports(4001
 fun main(args: Array<String>) {
     // Setup DHT
     peer1.peer().bootstrap().peerAddress(peer2.peerAddress()).start().awaitListeners()
-    val peer1Data = Data(peer1.peerAddress().toByteArray())
-    val peer2Data = Data(peer2.peerAddress().toByteArray())
+    val peer1Data = Data(peer1.peerAddress().toString())
+    val peer2Data = Data(peer2.peerAddress().toString())
 
     fun store(sessionId: String, peerData: Data) = peer1.put(Number160.createHash(sessionId))
         .data(peerData).start()
@@ -35,7 +35,9 @@ fun main(args: Array<String>) {
 
     fun get(sessionId: String): String {
         var futureGet = peer1.get(Number160.createHash(sessionId)).start().awaitUninterruptibly()
+        logger.info { futureGet.isSuccess }
         return if (futureGet.isSuccess) {
+            logger.info { futureGet.data() }
             futureGet.data().`object`().toString()
         } else "not found"
     }
