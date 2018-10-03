@@ -1,8 +1,10 @@
 package ch.hsr.dsl.dwrtc.signaling
 
-abstract class Message {
-    abstract val sender: Client
-    abstract val recipient: Client
+abstract class Message constructor(val sender: Client, val messageBody: String) {
+    abstract var recipient: Client
 
-    fun send() = sender.sendMessage(this)
+    fun sendTo(recipient: Client) {
+        this.recipient = recipient
+        sender.sendMessage(this)
+    }
 }
