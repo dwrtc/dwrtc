@@ -6,12 +6,12 @@ import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
 
-class TomP2PClientDiscoveryService : ClientDiscoveryService {
+class TomP2PClientDiscoveryService() : ClientDiscoveryService {
     private val peerId = UUID.randomUUID().toString()
     private val peer = PeerBuilderDHT(PeerBuilder(Number160.createHash(peerId)).ports(4000).start()).start()!!
 
-    constructor(bootstrapPeerAddress: PeerConnectionDetails) {
-        peer.peer().bootstrap().inetAddress(bootstrapPeerAddress.ip_address).ports(bootstrapPeerAddress.port).start()
+    constructor(bootstrapPeerAddress: PeerConnectionDetails) : this() {
+        peer.peer().bootstrap().inetAddress(bootstrapPeerAddress.ipAddress).ports(bootstrapPeerAddress.port).start()
             .awaitListeners()
     }
 
