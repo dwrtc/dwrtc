@@ -24,6 +24,13 @@ class ClientService() {
                 .awaitListeners()
     }
 
+    constructor(bootstrapPeerAddress: PeerAddress) : this() {
+        logger.info { "using bootstrap peer (TomP2P format) $bootstrapPeerAddress" }
+
+        peer.peer().bootstrap().peerAddress(bootstrapPeerAddress).start()
+                .awaitListeners()
+    }
+
     fun addClient(sessionId: String): InternalClient {
         logger.info { "add client $sessionId" }
 
