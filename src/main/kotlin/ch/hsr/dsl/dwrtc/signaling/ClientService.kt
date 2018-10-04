@@ -1,5 +1,6 @@
 package ch.hsr.dsl.dwrtc.signaling
 
+import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
 import mu.KLogging
 import net.tomp2p.dht.PeerBuilderDHT
 import net.tomp2p.p2p.PeerBuilder
@@ -48,11 +49,11 @@ class ClientService() {
         logger.info { "try to find client $sessionId" }
 
         val peerIdGet = peer.get(Number160.createHash(sessionId)).start().awaitUninterruptibly()
-        return if (peerIdGet.isSuccess) {
+        return if (peerIdGet.isSuccess && peerIdGet.data() != null) {
             logger.info { "found client" }
 
             val peerAddress = peerIdGet.data().`object`() as PeerAddress
             ExternalClient(sessionId, peerAddress)
-        } else throw Exception("No peer found under session ID $sessionId")
+        } else throw ClientNotFoundException("No peer found under session ID $sessionId")
     }
 }
