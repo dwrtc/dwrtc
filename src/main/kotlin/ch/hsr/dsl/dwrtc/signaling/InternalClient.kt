@@ -15,16 +15,21 @@ class InternalClient(private val peer: PeerDHT, val sessionId: String) {
             .start()
     }
 
-    fun onReceiveMessage(emitter: (ExternalClient, MessageDto) -> Any) {
+    fun onReceiveMessage(emitter: (ExternalClient, MessageDto) -> Unit) {
         logger.info { "register emitter for message receiving" }
 
         peer.peer().objectDataReply { senderPeerAddress, messageDto ->
-            if (messageDto is MessageDto && messageDto.senderSessionId == sessionId) emitter(
+            logger.info { "got message " }
+            if (messageDto is MessageDto && messageDto.senderSessionId == sessionId) {
+                logger.info { "message accepted" }
+                emitter(
                 ExternalClient(
                     messageDto.senderSessionId,
                     senderPeerAddress
                 ), messageDto
-            )
+                )
+            }
+            logger.info { "message discarded" }
         }
     }
 }
