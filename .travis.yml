@@ -18,4 +18,4 @@ cache:
 script:
 - ./gradlew build
 - ./gradlew test
-- ./gradlew sonarqube -Dsonar.projectKey=$SONAR_KEY -Dsonar.organization=$SONAR_ORGANZATION -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN
+#- ./gradlew sonarqube -Dsonar.projectKey=$SONAR_KEY -Dsonar.organization=$SONAR_ORGANZATION -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN

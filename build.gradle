@@ -1,10 +1,11 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.2.70"
+    id "org.sonarqube" version "2.6"
+}
+
 group = "ch.hsr.dsl.dwrtc"
 version = "1.0-SNAPSHOT"
 
-plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.2.70"
-    id("org.sonarqube") version "2.6"
-}
 
 ext {
     tomP2PVersion = "5.0-Beta8"
@@ -28,17 +29,17 @@ repositories {
 dependencies {
     // https://stackoverflow.com/q/49956051
     //noinspection DifferentStdlibGradleVersion
-    compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
-    compile("net.tomp2p:tomp2p-all:${tomP2PVersion}")
-    compile("io.javalin:javalin:${javalinVersion}")
-    compile("org.slf4j:slf4j-simple:${slf4JVersion}")
+    compile "net.tomp2p:tomp2p-all:${tomP2PVersion}"
+    compile "io.javalin:javalin:${javalinVersion}"
+    compile "org.slf4j:slf4j-simple:${slf4JVersion}"
 
-    compile("io.github.microutils:kotlin-logging:${kotlinLoggingVersion}")
+    compile "io.github.microutils:kotlin-logging:${kotlinLoggingVersion}"
 
-    compile("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}"
 
-    testCompile("io.kotlintest:kotlintest-runner-junit5:${kotlinTestVersion}")
+    testCompile "io.kotlintest:kotlintest-runner-junit5:${kotlinTestVersion}"
 }
 test {
     useJUnitPlatform {}

@@ -6,28 +6,29 @@ import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
 
-class TomP2PClientDiscoveryService() : ClientDiscoveryService {
+class ClientService() {
     private val peerId = UUID.randomUUID().toString()
     private val peer = PeerBuilderDHT(PeerBuilder(Number160.createHash(peerId)).ports(4000).start()).start()!!
 
     constructor(bootstrapPeerAddress: PeerConnectionDetails) : this() {
         peer.peer().bootstrap().inetAddress(bootstrapPeerAddress.ipAddress).ports(bootstrapPeerAddress.port).start()
-            .awaitListeners()
+                .awaitListeners()
     }
 
-    override fun registerClient(sessionId: String) {
+    fun addClient(sessionId: String): InternalClient {
         peer.put(Number160.createHash(sessionId)).`object`(peer.peerAddress()).start().awaitUninterruptibly()
+        return InternalClient(peer, sessionId)
     }
 
-    override fun deregisterClient(sessionId: String) {
-        peer.remove(Number160.createHash(sessionId)).all().start().awaitUninterruptibly()
+    fun removeClient(internalClient: InternalClient) {
+        peer.remove(Number160.createHash(internalClient.sessionId)).all().start().awaitUninterruptibly()
     }
 
-    override fun findClient(sessionId: String): Client {
+    fun findClient(sessionId: String): ExternalClient {
         val peerIdGet = peer.get(Number160.createHash(sessionId)).start().awaitUninterruptibly()
         return if (peerIdGet.isSuccess) {
             val peerAddress = peerIdGet.data().`object`() as PeerAddress
-            TomP2PClient(peer, sessionId, peerAddress)
+            ExternalClient(sessionId, peerAddress)
         } else throw Exception("No peer found under session ID $sessionId")
     }
 }
