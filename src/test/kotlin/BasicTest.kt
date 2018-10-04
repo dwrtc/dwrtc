@@ -14,7 +14,7 @@ import java.util.*
 object DHTListener : TestListener {
 
     val peers = LinkedList<PeerDHT>()
-    private const val PORT_START = 5000
+    private const val PORT_START = 5100
 
     override fun afterTest(description: Description, result: TestResult) {
         peers.forEach { it.shutdown() }
@@ -26,7 +26,7 @@ object DHTListener : TestListener {
      */
     fun generateDHT(numberOfPeers: Int): DHTListener {
         val firstPeer = PeerBuilderDHT(PeerBuilder(Number160.createHash(UUID.randomUUID().toString()))
-                .ports(4000).start()).start()
+                .ports(5000).start()).start()
         for (i in 0..numberOfPeers) {
             val peer = PeerBuilderDHT(PeerBuilder(Number160.createHash(UUID.randomUUID().toString()))
                     .ports(PORT_START + i).start()).start()
@@ -60,12 +60,18 @@ class Main2Test : StringSpec() {
             val FIRST_CLIENT = "Richi"
             val SECOND_CLIENT = "Hermann"
             val MESSAGE = "HalloVelo"
+
             val firstClient = clientService.addClient(FIRST_CLIENT)
             val secondClient = clientService.addClient(SECOND_CLIENT)
 
             var gotMessage = ""
 
+            val firstexternalClient = clientService.findClient(FIRST_CLIENT)
+            print(firstexternalClient.peerAddress)
+
             val secondExternalClient = clientService.findClient(SECOND_CLIENT)
+            print(secondExternalClient.peerAddress)
+
             secondClient.onReceiveMessage { client, message -> gotMessage = message.messageBody }
             firstClient.sendMessage(MESSAGE, secondExternalClient)
         }
