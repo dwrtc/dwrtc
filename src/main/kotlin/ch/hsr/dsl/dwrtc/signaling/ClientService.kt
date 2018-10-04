@@ -8,24 +8,24 @@ import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
 
-class ClientService() {
+class ClientService(private val port: Int = 4000) {
     companion object : KLogging()
 
     private val peerId = UUID.randomUUID().toString()
-    private val peer = PeerBuilderDHT(PeerBuilder(Number160.createHash(peerId)).ports(4000).start()).start()!!
+    private val peer = PeerBuilderDHT(PeerBuilder(Number160.createHash(peerId)).ports(port).start()).start()!!
 
     init {
-        logger.info { "creating service" }
+        logger.info { "creating service with peer id $peerId port $port" }
     }
 
-    constructor(bootstrapPeerAddress: PeerConnectionDetails) : this() {
+    constructor(bootstrapPeerAddress: PeerConnectionDetails, port: Int = 4000) : this(port) {
         logger.info { "using bootstrap peer $bootstrapPeerAddress" }
 
         peer.peer().bootstrap().inetAddress(bootstrapPeerAddress.ipAddress).ports(bootstrapPeerAddress.port).start()
                 .awaitListeners()
     }
 
-    constructor(bootstrapPeerAddress: PeerAddress) : this() {
+    constructor(bootstrapPeerAddress: PeerAddress, port: Int = 4000) : this(port) {
         logger.info { "using bootstrap peer (TomP2P format) $bootstrapPeerAddress" }
 
         peer.peer().bootstrap().peerAddress(bootstrapPeerAddress).start()
@@ -34,6 +34,7 @@ class ClientService() {
 
     fun addClient(sessionId: String): InternalClient {
         logger.info { "add client $sessionId" }
+        logger.info { "own peer: ${peer.peerAddress()} " }
 
         peer.put(Number160.createHash(sessionId)).`object`(peer.peerAddress()).start().awaitUninterruptibly()
         return InternalClient(peer, sessionId)
