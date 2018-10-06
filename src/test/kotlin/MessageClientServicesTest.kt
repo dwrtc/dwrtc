@@ -29,7 +29,7 @@ class MessageClientServicesTest : WordSpec(), TestListener {
 
         val clientFirst = clientServiceFirst.addClient(FIRST_CLIENT_ID)
         val clientSecond = clientServiceSecond.addClient(SECOND_CLIENT_ID)
-        val externalClientSecond = clientServiceFirst.findClient(SECOND_CLIENT_ID)
+        val externalClientSecond = clientServiceFirst.findClient(SECOND_CLIENT_ID) // TODO inconsistent
         var message = ""
 
         clientSecond.onReceiveMessage { _, messageDto -> message = messageDto.messageBody }
@@ -38,6 +38,12 @@ class MessageClientServicesTest : WordSpec(), TestListener {
 
         "A sent message" should {
             "be received" {
+                /* This test will probably fail because of async things anway
+                Maybe we need to do a .shouldbe in the onReceiveMessage, this will probably work
+
+                However, we see that onReceiveMessage never even fires.
+                There should at least be a "got message" log line! But there's only "sent" from the other peer
+                 */
                 message.shouldBe(MESSAGE_BODY)
             }
         }
