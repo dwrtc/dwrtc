@@ -1,31 +1,32 @@
 package ch.hsr.dsl.dwrtc.signaling
 
 import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
+import ch.hsr.dsl.dwrtc.util.buildNewPeer
+import ch.hsr.dsl.dwrtc.util.findFreePort
 import mu.KLogging
-import net.tomp2p.dht.PeerBuilderDHT
-import net.tomp2p.p2p.PeerBuilder
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
 
-class ClientService(private val port: Int = 4000) {
+class ClientService() {
     companion object : KLogging()
 
+    private val port = findFreePort()
     private val peerId = UUID.randomUUID().toString()
-    private val peer = PeerBuilderDHT(PeerBuilder(Number160.createHash(peerId)).ports(port).start()).start()!!
+    internal val peer = buildNewPeer(peerId)
 
     init {
         logger.info { "creating service with peer id $peerId port $port" }
     }
 
-    constructor(bootstrapPeerAddress: PeerConnectionDetails, port: Int = 4000) : this(port) {
+    constructor(bootstrapPeerAddress: PeerConnectionDetails) : this() {
         logger.info { "using bootstrap peer $bootstrapPeerAddress" }
 
         peer.peer().bootstrap().inetAddress(bootstrapPeerAddress.ipAddress).ports(bootstrapPeerAddress.port).start()
                 .awaitListeners()
     }
 
-    constructor(bootstrapPeerAddress: PeerAddress, port: Int = 4000) : this(port) {
+    constructor(bootstrapPeerAddress: PeerAddress) : this() {
         logger.info { "using bootstrap peer (TomP2P format) $bootstrapPeerAddress" }
 
         peer.peer().bootstrap().peerAddress(bootstrapPeerAddress).start()
