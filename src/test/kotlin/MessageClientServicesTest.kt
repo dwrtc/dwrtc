@@ -1,7 +1,9 @@
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
-import io.kotlintest.*
+import io.kotlintest.Description
+import io.kotlintest.TestCaseOrder
+import io.kotlintest.TestResult
 import io.kotlintest.extensions.TestListener
+import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 
 class MessageClientServicesTest : WordSpec(), TestListener {
