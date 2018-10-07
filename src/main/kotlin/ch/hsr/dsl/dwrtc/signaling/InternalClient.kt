@@ -9,29 +9,30 @@ class InternalClient(private val peer: PeerDHT, val sessionId: String) {
     fun sendMessage(messageBody: String, recipient: ExternalClient) {
         logger.info { "send message $messageBody from ${peer.peerAddress()} to $recipient" }
 
-        peer.peer()
+        val result = peer.peer()
                 .sendDirect(recipient.peerAddress)
                 .`object`(MessageDto(sessionId, recipient.sessionId, messageBody))
-                .start()
-                .awaitListeners()
-        logger.info { "sent" }
+            .start().await()
+        logger.info { "sent message $messageBody from ${peer.peerAddress()} to $recipient" }
+        if (result.isFailed) throw Exception(result.failedReason())
     }
 
     fun onReceiveMessage(emitter: (ExternalClient, MessageDto) -> Unit) {
         logger.info { "register emitter for message receiving (own peer address ${peer.peerAddress()})" }
 
         peer.peer().objectDataReply { senderPeerAddress, messageDto ->
-            logger.info { "got message " }
-            if (messageDto is MessageDto && messageDto.senderSessionId == sessionId) {
+            logger.info { "got message $messageDto" }
+            if (messageDto is MessageDto && messageDto.recipientSessionId == sessionId) {
                 logger.info { "message accepted" }
                 emitter(
-                        ExternalClient(
-                                messageDto.senderSessionId,
-                                senderPeerAddress
-                        ), messageDto
+                    ExternalClient(
+                        messageDto.senderSessionId,
+                        senderPeerAddress
+                    ), messageDto
                 )
             }
             logger.info { "message discarded" }
+            messageDto
         }
     }
 }

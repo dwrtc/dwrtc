@@ -7,13 +7,11 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 
 class MessageClientServicesTest : WordSpec(), TestListener {
-    override fun isInstancePerTest(): Boolean = true  // we get a new `peers` per test
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
 
     companion object {
         const val FIRST_CLIENT_ID = "FIRST_CLIENT_ID"
         const val SECOND_CLIENT_ID = "SECOND_CLIENT_ID"
-        const val THIRD_CLIENT_ID = "THIRD_CLIENT_ID"
         const val MESSAGE_BODY = "MESSAGE_BODY"
     }
 
@@ -29,21 +27,19 @@ class MessageClientServicesTest : WordSpec(), TestListener {
 
         val clientFirst = clientServiceFirst.addClient(FIRST_CLIENT_ID)
         val clientSecond = clientServiceSecond.addClient(SECOND_CLIENT_ID)
+
         val externalClientSecond = clientServiceFirst.findClient(SECOND_CLIENT_ID) // TODO inconsistent
+
         var message = ""
 
-        clientSecond.onReceiveMessage { _, messageDto -> message = messageDto.messageBody }
-        clientFirst.sendMessage(MESSAGE_BODY, externalClientSecond)
+        "a client" should {
+            "be able to send a message" {
+                clientFirst.sendMessage(MESSAGE_BODY, externalClientSecond)
+            }
 
-
-        "A sent message" should {
-            "be received" {
-                /* This test will probably fail because of async things anway
-                Maybe we need to do a .shouldbe in the onReceiveMessage, this will probably work
-
-                However, we see that onReceiveMessage never even fires.
-                There should at least be a "got message" log line! But there's only "sent" from the other peer
-                 */
+            "be able to receive a message" {
+                clientSecond.onReceiveMessage { _, messageDto -> message = messageDto.messageBody }
+                clientFirst.sendMessage(MESSAGE_BODY, externalClientSecond)
                 message.shouldBe(MESSAGE_BODY)
             }
         }

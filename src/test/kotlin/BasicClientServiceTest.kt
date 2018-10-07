@@ -5,7 +5,6 @@ import io.kotlintest.extensions.TestListener
 import io.kotlintest.specs.WordSpec
 
 class BasicClientServiceTest : WordSpec(), TestListener {
-    override fun isInstancePerTest(): Boolean = true  // we get a new `peers` per test
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
 
     companion object {
