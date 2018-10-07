@@ -30,21 +30,18 @@ class DhtTest : WordSpec(), TestListener {
 
     init {
         "A peer in a DHT network" should {
+            println("SHOULD SEE TWICE INIT")
+            peers.first().put(DATA_KEY_HASH).data(Data(DATA_VALUE)).start().awaitListenersUninterruptibly()
+            val firstDataGet = peers.first().get(DATA_KEY_HASH).start().awaitListenersUninterruptibly()
+            val secondDataGet = peers.last().get(DATA_KEY_HASH).start().awaitListenersUninterruptibly()
+            
             "find existing data it put there itself" {
-                println("SHOULD SEE TWICE INIT")
-                peers.first().put(DATA_KEY_HASH).data(Data(DATA_VALUE)).start().awaitListenersUninterruptibly()
-                val firstDataGet = peers.first().get(DATA_KEY_HASH).start().awaitListenersUninterruptibly()
-                val secondDataGet = peers.last().get(DATA_KEY_HASH).start().awaitListenersUninterruptibly()
                 println("SHOULD SEE ONCE FIRST")
                 firstDataGet.isSuccess.shouldBeTrue()
                 firstDataGet.data().shouldNotBe(null)
                 firstDataGet.data().`object`().shouldBe(DATA_VALUE)
             }
             "find existing data some other peer put there" {
-                println("SHOULD SEE TWICE INIT")
-                peers.first().put(DATA_KEY_HASH).data(Data(DATA_VALUE)).start().awaitListenersUninterruptibly()
-                val firstDataGet = peers.first().get(DATA_KEY_HASH).start().awaitListenersUninterruptibly()
-                val secondDataGet = peers.last().get(DATA_KEY_HASH).start().awaitListenersUninterruptibly()
                 println("SHOULD SEE ONCE SECOND")
                 secondDataGet.isSuccess.shouldBeTrue()
                 secondDataGet.data().shouldNotBe(null)
