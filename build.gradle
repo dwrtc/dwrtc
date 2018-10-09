@@ -16,6 +16,7 @@ ext {
     slf4JVersion = "1.7.+"
     kotlinLoggingVersion = "1.6.+"
     kotlinTestVersion = "3.1.+"
+    konfigVersion = "1.6.10.+"
 
 }
 
@@ -40,6 +41,8 @@ dependencies {
     compile "io.github.microutils:kotlin-logging:${kotlinLoggingVersion}"
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}"
+
+    compile "com.natpryce:konfig:${konfigVersion}"
 
     testCompile "io.kotlintest:kotlintest-runner-junit5:${kotlinTestVersion}"
 }
