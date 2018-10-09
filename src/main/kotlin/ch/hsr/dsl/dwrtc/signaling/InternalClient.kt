@@ -30,8 +30,9 @@ class InternalClient(private val peer: PeerDHT, val sessionId: String) {
                         senderPeerAddress
                     ), messageDto
                 )
+            } else {
+                logger.info { "message discarded" }
             }
-            logger.info { "message discarded" }
             messageDto
         }
     }
