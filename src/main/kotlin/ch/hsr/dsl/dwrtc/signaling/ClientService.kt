@@ -6,12 +6,14 @@ import mu.KLogging
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
+import kotlin.collections.HashMap
 
 class ClientService() {
     companion object : KLogging()
 
     private val peerId = UUID.randomUUID().toString()
     internal val peer = buildNewPeer(peerId)
+    private val emitterMap = HashMap<String, (ExternalClient, MessageDto) -> Unit>()
 
     init {
         logger.info {
@@ -39,7 +41,7 @@ class ClientService() {
         logger.info { "own peer: ${peer.peerAddress()} " }
 
         peer.put(Number160.createHash(sessionId)).`object`(peer.peerAddress()).start().awaitUninterruptibly()
-        return InternalClient(peer, sessionId)
+        return InternalClient(peer, this, sessionId)
     }
 
     fun removeClient(internalClient: InternalClient) {
@@ -58,5 +60,30 @@ class ClientService() {
             val peerAddress = peerIdGet.data().`object`() as PeerAddress
             ExternalClient(sessionId, peerAddress)
         } else throw ClientNotFoundException("No peer found under session ID $sessionId")
+    }
+
+    internal fun addListener(sessionId: String, emitter: (ExternalClient, MessageDto) -> Unit) {
+        emitterMap[sessionId] = emitter
+
+        peer.peer().objectDataReply { senderPeerAddress, messageDto ->
+            logger.info { "got message $messageDto" }
+            if (messageDto is MessageDto) {
+                val recipientSessionId = messageDto.recipientSessionId
+                if (emitterMap.containsKey(recipientSessionId)) {
+                    logger.info { "message accepted, found emitter for $sessionId" }
+                    emitter(
+                            ExternalClient(
+                                    messageDto.senderSessionId,
+                                    senderPeerAddress
+                            ), messageDto
+                    )
+                } else {
+                    logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
+                }
+            } else {
+                logger.info { "message discarded (not a message dto)" }
+            }
+            messageDto
+        }
     }
 }
