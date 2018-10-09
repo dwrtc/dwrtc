@@ -33,7 +33,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         val client = signallingService.addClient(session.id)
         client.onReceiveMessage { sender, messageDto -> receiveSignallingMessage(sender, messageDto) }
         clients[session.id] = client
-        session.send(session.id)
+        session.send(messageDtoToJson(MessageDto(0.toString(), session.id, "")))
     }
 
     private fun receiveWebrtcMessage(session: WsSession, message: String) {
@@ -57,7 +57,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
     }
 
     private fun receiveSignallingMessage(sender: ExternalClient, message: MessageDto) {
-        sessions[message.recipientSessionId]?.let { it.send(message.messageBody) }
+        sessions[message.recipientSessionId]?.let { it.send(messageDtoToJson(message)) }
     }
 
     private fun jsonToMessageDto(message: String) = JavalinJackson.fromJson(message, MessageDto::class.java)
