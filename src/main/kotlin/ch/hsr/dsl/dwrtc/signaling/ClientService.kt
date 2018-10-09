@@ -2,7 +2,6 @@ package ch.hsr.dsl.dwrtc.signaling
 
 import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
-import ch.hsr.dsl.dwrtc.util.findFreePort
 import mu.KLogging
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
@@ -11,12 +10,14 @@ import java.util.*
 class ClientService() {
     companion object : KLogging()
 
-    private val port = findFreePort()
     private val peerId = UUID.randomUUID().toString()
     internal val peer = buildNewPeer(peerId)
 
     init {
-        logger.info { "creating service with peer id $peerId port $port" }
+        logger.info {
+            "creating service with peer id $peerId at port " +
+                    "${peer.peerAddress().tcpPort()} (TCP)/${peer.peerAddress().udpPort()} (UDP)"
+        }
     }
 
     constructor(bootstrapPeerAddress: PeerConnectionDetails) : this() {
