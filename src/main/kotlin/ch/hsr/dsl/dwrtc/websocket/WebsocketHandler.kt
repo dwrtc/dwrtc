@@ -38,6 +38,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
 
     private fun onReceiveMessageFromWebsocket(session: WsSession, message: String) {
         val messageDto = jsonToMessageDto(message)
+        messageDto.senderSessionId = session.id
         val recipient = signallingService.findClient(messageDto.recipientSessionId)
 
         clients[session.id]?.let { it.sendMessage(messageDto.messageBody, recipient) }
