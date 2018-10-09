@@ -32,7 +32,7 @@ class InternalClient(private val peer: PeerDHT, val sessionId: String) {
                             ), messageDto
                     )
                 } else {
-                    logger.info { "message discarded (expecting $sessionId)" }
+                    logger.info { "message discarded (expecting $sessionId) but was ${messageDto.recipientSessionId}" }
                 }
             } else {
                 logger.info { "message discarded (not a message dto)" }
