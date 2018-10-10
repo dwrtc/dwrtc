@@ -63,7 +63,7 @@ class ClientService() {
         } else throw ClientNotFoundException("No peer found under session ID $sessionId")
     }
 
-    internal fun addListener(sessionId: String, emitter: (ExternalClient, MessageDto) -> Unit) {
+    internal fun addDirectMessageListener(sessionId: String, emitter: (ExternalClient, MessageDto) -> Unit) {
         emitterMap[sessionId] = emitter
 
         peer.peer().objectDataReply { senderPeerAddress, messageDto ->

@@ -20,7 +20,7 @@ class InternalClient(private val peer: PeerDHT, private val clientService: Clien
     fun onReceiveMessage(emitter: (ExternalClient, MessageDto) -> Unit) {
         logger.info { "register emitter for message receiving (own peer address ${peer.peerAddress()})" }
 
-        clientService.addListener(sessionId, emitter)
+        clientService.addDirectMessageListener(sessionId, emitter)
     }
 }
  
