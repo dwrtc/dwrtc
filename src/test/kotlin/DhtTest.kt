@@ -17,7 +17,7 @@ class DhtTest : WordSpec(), TestListener {
     private val peers = generateDHT(5)
 
     override fun afterSpec(description: Description, spec: Spec) {
-        peers.forEach { it.shutdown().awaitListenersUninterruptibly() }
+        peers.forEach { it.shutdown().await() }
     }
 
     init {
