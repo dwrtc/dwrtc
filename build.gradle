@@ -44,8 +44,6 @@ dependencies {
 
     compile "com.natpryce:konfig:${konfigVersion}"
 
-    compile group: 'org.graalvm', name: 'graal-sdk', version: '1.0.0-rc7'
-
     testCompile "io.kotlintest:kotlintest-runner-junit5:${kotlinTestVersion}"
 }
 test {

@@ -1,9 +1,7 @@
-FROM gradle:jdk10 as builder
+FROM openjdk:10-jdk as builder
 WORKDIR /app
 COPY . .
-USER root
-RUN ./gradlew --no-daemon build pack
-
+RUN ./gradlew --no-daemon build -x test pack
 
 FROM openjdk:12-jdk-alpine as runner
 WORKDIR /app
