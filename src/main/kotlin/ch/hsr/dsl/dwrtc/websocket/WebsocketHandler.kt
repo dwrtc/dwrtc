@@ -3,7 +3,7 @@ package ch.hsr.dsl.dwrtc.websocket
 import ch.hsr.dsl.dwrtc.signaling.ClientService
 import ch.hsr.dsl.dwrtc.signaling.ExternalClient
 import ch.hsr.dsl.dwrtc.signaling.InternalClient
-import ch.hsr.dsl.dwrtc.signaling.MessageDto
+import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import io.javalin.Javalin
 import io.javalin.json.JavalinJackson
 import io.javalin.websocket.WsSession
@@ -37,9 +37,9 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
     }
 
     private fun onReceiveMessageFromWebsocket(session: WsSession, message: String) {
-        val messageDto = jsonToMessageDto(message)
+        val messageDto = jsonTo<SignalingMessage>(message)
         messageDto.senderSessionId = session.id
-        val recipient = signallingService.findClient(messageDto.recipientSessionId)
+        val recipient = signallingService.findClient(messageDto.recipientSessionId!!)
 
         clients[session.id]?.let { it.sendMessage(messageDto.messageBody, recipient) }
     }
@@ -57,10 +57,12 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         }
     }
 
-    private fun onReceiveMessageFromSignaling(sender: ExternalClient, message: MessageDto) {
-        sessions[message.recipientSessionId]?.let { it.send(messageDtoToJson(message)) }
+    private fun onReceiveMessageFromSignaling(sender: ExternalClient, message: SignalingMessage) {
+        sessions[message.recipientSessionId]?.let { it.send(xToJson(message)) }
     }
 
-    private fun jsonToMessageDto(message: String) = JavalinJackson.fromJson(message, MessageDto::class.java)
-    private fun messageDtoToJson(message: MessageDto) = JavalinJackson.toJson(message)
+    private inline fun <reified OutputType> jsonTo(jsonString: String) =
+            JavalinJackson.fromJson(jsonString, OutputType::class.java)
+
+    private fun xToJson(message: Any) = JavalinJackson.toJson(message)
 }

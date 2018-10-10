@@ -11,13 +11,13 @@ class InternalClient(private val peer: PeerDHT, private val clientService: Clien
 
         val result = peer.peer()
                 .sendDirect(recipient.peerAddress)
-                .`object`(MessageDto(sessionId, recipient.sessionId, messageBody))
+                .`object`(SignalingMessage(sessionId, recipient.sessionId, messageBody))
                 .start().await()
         logger.info { "sent message $messageBody from ${peer.peerAddress()} to $recipient" }
         if (result.isFailed) throw Exception(result.failedReason())
     }
 
-    fun onReceiveMessage(emitter: (ExternalClient, MessageDto) -> Unit) {
+    fun onReceiveMessage(emitter: (ExternalClient, SignalingMessage) -> Unit) {
         logger.info { "register emitter for message receiving (own peer address ${peer.peerAddress()})" }
 
         clientService.addDirectMessageListener(sessionId, emitter)

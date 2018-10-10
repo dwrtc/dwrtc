@@ -13,7 +13,7 @@ class ClientService() {
 
     private val peerId = UUID.randomUUID().toString()
     internal val peer = buildNewPeer(peerId)
-    private val emitterMap = ConcurrentHashMap<String, (ExternalClient, MessageDto) -> Unit>()
+    private val emitterMap = ConcurrentHashMap<String, (ExternalClient, SignalingMessage) -> Unit>()
 
     init {
         logger.info {
@@ -25,11 +25,12 @@ class ClientService() {
     }
 
     private fun setupDirectMessageListener() {
-        fun dispatchMessage(messageDto: MessageDto, senderPeerAddress: PeerAddress) {
-            val recipientSessionId = messageDto.recipientSessionId
+        fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {
+            val recipientSessionId = signalingMessage.recipientSessionId!!
+            val senderSessionId = signalingMessage.senderSessionId!!
             emitterMap[recipientSessionId]?.let {
                 logger.info { "message accepted, found emitter for $recipientSessionId" }
-                it(ExternalClient(messageDto.senderSessionId, senderPeerAddress), messageDto)
+                it(ExternalClient(senderSessionId, senderPeerAddress), signalingMessage)
             } ?: run {
                 logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
             }
@@ -37,7 +38,7 @@ class ClientService() {
 
         fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
             logger.info { "got message $messageDto" }
-            return if (messageDto is MessageDto) {
+            return if (messageDto is SignalingMessage) {
                 dispatchMessage(messageDto, senderPeerAddress)
                 messageDto
             } else {
@@ -91,7 +92,7 @@ class ClientService() {
         } else throw ClientNotFoundException("No peer found under session ID $sessionId")
     }
 
-    internal fun addDirectMessageListener(sessionId: String, emitter: (ExternalClient, MessageDto) -> Unit) {
+    internal fun addDirectMessageListener(sessionId: String, emitter: (ExternalClient, SignalingMessage) -> Unit) {
         emitterMap[sessionId] = emitter
     }
 }
