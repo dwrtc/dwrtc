@@ -73,10 +73,8 @@ class ClientService() {
                 emitterMap[recipientSessionId]?.let {
                     logger.info { "message accepted, found emitter for $sessionId" }
                     emitter(
-                            ExternalClient(
-                                    messageDto.senderSessionId,
-                                    senderPeerAddress
-                            ), messageDto
+                            ExternalClient(messageDto.senderSessionId, senderPeerAddress),
+                            messageDto
                     )
                 } ?: run {
                     logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
