@@ -57,3 +57,19 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+
+task pack(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': "dwrtc",
+                'Implementation-Version': version,
+                'Main-Class': 'ch.hsr.dsl.dwrtc.websocket.MainKt'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+task downloadDependencies(type: Exec) {
+    configurations.testRuntime.files
+    commandLine 'echo', 'Downloaded all dependencies'
+}
