@@ -21,10 +21,10 @@ class ClientService() {
                     "${peer.peerAddress().tcpPort()} (TCP)/${peer.peerAddress().udpPort()} (UDP)"
         }
 
-        registerDirectMessageListener()
+        setupDirectMessageListener()
     }
 
-    private fun registerDirectMessageListener() {
+    private fun setupDirectMessageListener() {
         peer.peer().objectDataReply { senderPeerAddress, messageDto ->
             logger.info { "got message $messageDto" }
             if (messageDto !is MessageDto) {
