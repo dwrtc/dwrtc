@@ -31,7 +31,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         sessions[session.id] = session
 
         val client = signallingService.addClient(session.id)
-        client.onReceiveMessage { sender, messageDto -> onReceiveMessageFromP2P(sender, messageDto) }
+        client.onReceiveMessage { sender, messageDto -> onReceiveMessageFromSignaling(sender, messageDto) }
         clients[session.id] = client
         session.send(session.id)
     }
@@ -57,7 +57,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         }
     }
 
-    private fun onReceiveMessageFromP2P(sender: ExternalClient, message: MessageDto) {
+    private fun onReceiveMessageFromSignaling(sender: ExternalClient, message: MessageDto) {
         sessions[message.recipientSessionId]?.let { it.send(messageDtoToJson(message)) }
     }
 
