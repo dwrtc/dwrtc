@@ -1,9 +1,7 @@
 package ch.hsr.dsl.dwrtc.websocket
 
-import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.ExternalClient
-import ch.hsr.dsl.dwrtc.signaling.InternalClient
-import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
+import ch.hsr.dsl.dwrtc.signaling.*
+import ch.hsr.dsl.dwrtc.signaling.exceptions.SignalingException
 import io.javalin.Javalin
 import io.javalin.json.JavalinJackson
 import io.javalin.websocket.WsSession
@@ -33,15 +31,20 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         val client = signallingService.addClient(session.id)
         client.onReceiveMessage { sender, messageDto -> onReceiveMessageFromSignaling(sender, messageDto) }
         clients[session.id] = client
-        session.send(session.id)
+
+        val message = WebsocketIdMessage(session.id)
+        session.send(toJson(message))
     }
 
     private fun onReceiveMessageFromWebsocket(session: WsSession, message: String) {
         val messageDto = jsonTo<SignalingMessage>(message)
         messageDto.senderSessionId = session.id
-        val recipient = signallingService.findClient(messageDto.recipientSessionId!!)
-
-        clients[session.id]?.let { it.sendMessage(messageDto.messageBody, recipient) }
+        try {
+            val recipient = signallingService.findClient(messageDto.recipientSessionId!!)
+            clients[session.id]?.let { it.sendMessage(messageDto.messageBody, recipient) }
+        } catch (e: SignalingException) {
+            session.send(toJson(WebsocketErrorMessage(e.message)))
+        }
     }
 
     private fun close(session: WsSession, reason: String) {
@@ -58,11 +61,11 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
     }
 
     private fun onReceiveMessageFromSignaling(sender: ExternalClient, message: SignalingMessage) {
-        sessions[message.recipientSessionId]?.let { it.send(xToJson(message)) }
+        sessions[message.recipientSessionId]?.let { it.send(toJson(message)) }
     }
 
     private inline fun <reified OutputType> jsonTo(jsonString: String) =
             JavalinJackson.fromJson(jsonString, OutputType::class.java)
 
-    private fun xToJson(message: Any) = JavalinJackson.toJson(message)
+    private fun toJson(message: Any) = JavalinJackson.toJson(message)
 }
