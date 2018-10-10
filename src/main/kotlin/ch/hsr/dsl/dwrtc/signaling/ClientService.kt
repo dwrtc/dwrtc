@@ -6,14 +6,14 @@ import mu.KLogging
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
-import kotlin.collections.HashMap
+import java.util.concurrent.ConcurrentHashMap
 
 class ClientService() {
     companion object : KLogging()
 
     private val peerId = UUID.randomUUID().toString()
     internal val peer = buildNewPeer(peerId)
-    private val emitterMap = HashMap<String, (ExternalClient, MessageDto) -> Unit>()
+    private val emitterMap = ConcurrentHashMap<String, (ExternalClient, MessageDto) -> Unit>()
 
     init {
         logger.info {
