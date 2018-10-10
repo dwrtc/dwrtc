@@ -70,7 +70,7 @@ class ClientService() {
             logger.info { "got message $messageDto" }
             if (messageDto is MessageDto) {
                 val recipientSessionId = messageDto.recipientSessionId
-                if (emitterMap.containsKey(recipientSessionId)) {
+                emitterMap[recipientSessionId]?.let {
                     logger.info { "message accepted, found emitter for $sessionId" }
                     emitter(
                             ExternalClient(
@@ -78,7 +78,7 @@ class ClientService() {
                                     senderPeerAddress
                             ), messageDto
                     )
-                } else {
+                } ?: run {
                     logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
                 }
             } else {
