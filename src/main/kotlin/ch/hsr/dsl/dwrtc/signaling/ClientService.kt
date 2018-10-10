@@ -48,6 +48,7 @@ class ClientService() {
         logger.info { "remove client ${internalClient.sessionId}" }
 
         peer.remove(Number160.createHash(internalClient.sessionId)).all().start().awaitUninterruptibly()
+        emitterMap.remove(internalClient.sessionId)
     }
 
     fun findClient(sessionId: String): ExternalClient {
