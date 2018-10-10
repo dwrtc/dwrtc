@@ -6,17 +6,47 @@ import mu.KLogging
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class ClientService() {
     companion object : KLogging()
 
     private val peerId = UUID.randomUUID().toString()
     internal val peer = buildNewPeer(peerId)
+    private val emitterMap = ConcurrentHashMap<String, (ExternalClient, MessageDto) -> Unit>()
 
     init {
         logger.info {
             "creating service with peer id $peerId at port " +
                     "${peer.peerAddress().tcpPort()} (TCP)/${peer.peerAddress().udpPort()} (UDP)"
+        }
+
+        setupDirectMessageListener()
+    }
+
+    private fun setupDirectMessageListener() {
+        fun dispatchMessage(messageDto: MessageDto, senderPeerAddress: PeerAddress) {
+            val recipientSessionId = messageDto.recipientSessionId
+            emitterMap[recipientSessionId]?.let {
+                logger.info { "message accepted, found emitter for $recipientSessionId" }
+                it(ExternalClient(messageDto.senderSessionId, senderPeerAddress), messageDto)
+            } ?: run {
+                logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
+            }
+        }
+
+        fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
+            logger.info { "got message $messageDto" }
+            return if (messageDto is MessageDto) {
+                dispatchMessage(messageDto, senderPeerAddress)
+                messageDto
+            } else {
+                logger.info { "message discarded (not a message dto)" }
+            }
+        }
+
+        peer.peer().objectDataReply { senderPeerAddress, messageDto ->
+            tryDispatchingMessage(messageDto, senderPeerAddress)
         }
     }
 
@@ -39,13 +69,14 @@ class ClientService() {
         logger.info { "own peer: ${peer.peerAddress()} " }
 
         peer.put(Number160.createHash(sessionId)).`object`(peer.peerAddress()).start().awaitUninterruptibly()
-        return InternalClient(peer, sessionId)
+        return InternalClient(peer, this, sessionId)
     }
 
     fun removeClient(internalClient: InternalClient) {
         logger.info { "remove client ${internalClient.sessionId}" }
 
         peer.remove(Number160.createHash(internalClient.sessionId)).all().start().awaitUninterruptibly()
+        emitterMap.remove(internalClient.sessionId)
     }
 
     fun findClient(sessionId: String): ExternalClient {
@@ -58,5 +89,9 @@ class ClientService() {
             val peerAddress = peerIdGet.data().`object`() as PeerAddress
             ExternalClient(sessionId, peerAddress)
         } else throw ClientNotFoundException("No peer found under session ID $sessionId")
+    }
+
+    internal fun addDirectMessageListener(sessionId: String, emitter: (ExternalClient, MessageDto) -> Unit) {
+        emitterMap[sessionId] = emitter
     }
 }
