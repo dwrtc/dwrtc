@@ -20,6 +20,27 @@ class ClientService() {
             "creating service with peer id $peerId at port " +
                     "${peer.peerAddress().tcpPort()} (TCP)/${peer.peerAddress().udpPort()} (UDP)"
         }
+
+        registerDirectMessageListener()
+    }
+
+    private fun registerDirectMessageListener() {
+        peer.peer().objectDataReply { senderPeerAddress, messageDto ->
+            logger.info { "got message $messageDto" }
+            if (messageDto !is MessageDto) {
+                logger.info { "message discarded (not a message dto)" }
+            } else {
+                val recipientSessionId = messageDto.recipientSessionId
+                emitterMap[recipientSessionId]?.let {
+                    logger.info { "message accepted, found emitter for $recipientSessionId" }
+                    it(ExternalClient(messageDto.senderSessionId, senderPeerAddress), messageDto)
+                } ?: run {
+                    logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
+                }
+                logger.info { "message discarded (not a message dto)" }
+                messageDto
+            }
+        }
     }
 
     constructor(bootstrapPeerAddress: PeerConnectionDetails) : this() {
@@ -65,24 +86,5 @@ class ClientService() {
 
     internal fun addDirectMessageListener(sessionId: String, emitter: (ExternalClient, MessageDto) -> Unit) {
         emitterMap[sessionId] = emitter
-
-        peer.peer().objectDataReply { senderPeerAddress, messageDto ->
-            logger.info { "got message $messageDto" }
-            if (messageDto is MessageDto) {
-                val recipientSessionId = messageDto.recipientSessionId
-                emitterMap[recipientSessionId]?.let {
-                    logger.info { "message accepted, found emitter for $sessionId" }
-                    emitter(
-                            ExternalClient(messageDto.senderSessionId, senderPeerAddress),
-                            messageDto
-                    )
-                } ?: run {
-                    logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
-                }
-            } else {
-                logger.info { "message discarded (not a message dto)" }
-            }
-            messageDto
-        }
     }
 }
