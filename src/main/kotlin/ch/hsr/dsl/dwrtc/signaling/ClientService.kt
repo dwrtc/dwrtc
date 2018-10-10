@@ -25,20 +25,28 @@ class ClientService() {
     }
 
     private fun setupDirectMessageListener() {
-        peer.peer().objectDataReply { senderPeerAddress, messageDto ->
+        fun dispatchMessage(messageDto: MessageDto, senderPeerAddress: PeerAddress) {
+            val recipientSessionId = messageDto.recipientSessionId
+            emitterMap[recipientSessionId]?.let {
+                logger.info { "message accepted, found emitter for $recipientSessionId" }
+                it(ExternalClient(messageDto.senderSessionId, senderPeerAddress), messageDto)
+            } ?: run {
+                logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
+            }
+        }
+
+        fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
             logger.info { "got message $messageDto" }
-            if (messageDto is MessageDto) {
-                val recipientSessionId = messageDto.recipientSessionId
-                emitterMap[recipientSessionId]?.let {
-                    logger.info { "message accepted, found emitter for $recipientSessionId" }
-                    it(ExternalClient(messageDto.senderSessionId, senderPeerAddress), messageDto)
-                } ?: run {
-                    logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
-                }
+            return if (messageDto is MessageDto) {
+                dispatchMessage(messageDto, senderPeerAddress)
                 messageDto
             } else {
                 logger.info { "message discarded (not a message dto)" }
             }
+        }
+
+        peer.peer().objectDataReply { senderPeerAddress, messageDto ->
+            tryDispatchingMessage(messageDto, senderPeerAddress)
         }
     }
 
