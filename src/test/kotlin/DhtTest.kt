@@ -23,8 +23,8 @@ class DhtTest : WordSpec(), TestListener {
     init {
         "A peer in a DHT network" should {
             peers.first().put(DATA_KEY_HASH).data(Data(DATA_VALUE)).start().await()
-            val firstDataGet = peers.first().get(DATA_KEY_HASH).start().awaitListenersUninterruptibly()
-            val secondDataGet = peers.last().get(DATA_KEY_HASH).start().awaitListenersUninterruptibly()
+            val firstDataGet = peers.first().get(DATA_KEY_HASH).start().await()
+            val secondDataGet = peers.last().get(DATA_KEY_HASH).start().await()
             
             "find existing data it put there itself" {
                 firstDataGet.isSuccess.shouldBeTrue()
