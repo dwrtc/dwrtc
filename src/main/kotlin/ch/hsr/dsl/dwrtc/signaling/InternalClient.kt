@@ -12,7 +12,7 @@ class InternalClient(private val peer: PeerDHT, val sessionId: String) {
         val result = peer.peer()
                 .sendDirect(recipient.peerAddress)
                 .`object`(MessageDto(sessionId, recipient.sessionId, messageBody))
-            .start().await()
+                .start().await()
         logger.info { "sent message $messageBody from ${peer.peerAddress()} to $recipient" }
         if (result.isFailed) throw Exception(result.failedReason())
     }
@@ -22,16 +22,21 @@ class InternalClient(private val peer: PeerDHT, val sessionId: String) {
 
         peer.peer().objectDataReply { senderPeerAddress, messageDto ->
             logger.info { "got message $messageDto" }
-            if (messageDto is MessageDto && messageDto.recipientSessionId == sessionId) {
-                logger.info { "message accepted" }
-                emitter(
-                    ExternalClient(
-                        messageDto.senderSessionId,
-                        senderPeerAddress
-                    ), messageDto
-                )
+            if (messageDto is MessageDto) {
+                if (messageDto.recipientSessionId == sessionId) {
+                    logger.info { "message accepted" }
+                    emitter(
+                            ExternalClient(
+                                    messageDto.senderSessionId,
+                                    senderPeerAddress
+                            ), messageDto
+                    )
+                } else {
+                    logger.info { "message discarded (expecting $sessionId) but was ${messageDto.recipientSessionId}" }
+                }
+            } else {
+                logger.info { "message discarded (not a message dto)" }
             }
-            logger.info { "message discarded" }
             messageDto
         }
     }

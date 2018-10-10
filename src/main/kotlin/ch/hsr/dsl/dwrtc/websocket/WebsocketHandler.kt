@@ -19,7 +19,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
     init {
         app.ws("/ws") { ws ->
             ws.onConnect { session -> connect(session) }
-            ws.onMessage { session, message -> receiveWebrtcMessage(session, message)}
+            ws.onMessage { session, message -> onReceiveMessageFromWebsocket(session, message) }
             ws.onClose { session, statusCode, reason -> close(session, reason) }
             ws.onError { session, throwable -> logger.info { "Errored" } }
         }
@@ -31,13 +31,14 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         sessions[session.id] = session
 
         val client = signallingService.addClient(session.id)
-        client.onReceiveMessage { sender, messageDto -> receiveSignallingMessage(sender, messageDto) }
+        client.onReceiveMessage { sender, messageDto -> onReceiveMessageFromSignaling(sender, messageDto) }
         clients[session.id] = client
         session.send(session.id)
     }
 
-    private fun receiveWebrtcMessage(session: WsSession, message: String) {
+    private fun onReceiveMessageFromWebsocket(session: WsSession, message: String) {
         val messageDto = jsonToMessageDto(message)
+        messageDto.senderSessionId = session.id
         val recipient = signallingService.findClient(messageDto.recipientSessionId)
 
         clients[session.id]?.let { it.sendMessage(messageDto.messageBody, recipient) }
@@ -56,7 +57,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         }
     }
 
-    private fun receiveSignallingMessage(sender: ExternalClient, message: MessageDto) {
+    private fun onReceiveMessageFromSignaling(sender: ExternalClient, message: MessageDto) {
         sessions[message.recipientSessionId]?.let { it.send(messageDtoToJson(message)) }
     }
 
