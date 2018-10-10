@@ -27,9 +27,7 @@ class ClientService() {
     private fun setupDirectMessageListener() {
         peer.peer().objectDataReply { senderPeerAddress, messageDto ->
             logger.info { "got message $messageDto" }
-            if (messageDto !is MessageDto) {
-                logger.info { "message discarded (not a message dto)" }
-            } else {
+            if (messageDto is MessageDto) {
                 val recipientSessionId = messageDto.recipientSessionId
                 emitterMap[recipientSessionId]?.let {
                     logger.info { "message accepted, found emitter for $recipientSessionId" }
@@ -37,8 +35,9 @@ class ClientService() {
                 } ?: run {
                     logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
                 }
-                logger.info { "message discarded (not a message dto)" }
                 messageDto
+            } else {
+                logger.info { "message discarded (not a message dto)" }
             }
         }
     }
