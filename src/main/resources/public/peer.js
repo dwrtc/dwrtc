@@ -118,7 +118,7 @@ const setupPeer = () => {
       peer.on("stream", function(stream) {
         console.log("Got video stream!")
         var video = document.querySelector("video")
-        video.src = window.URL.createObjectURL(stream)
+        video.srcObject = stream
         video.play()
       })
     })
