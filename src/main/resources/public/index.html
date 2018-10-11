@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
 
+<body>
+    <div>
+        <form>
+            <label for="initiator">Initiator</label>
+            <input type="checkbox" id="initiator">
+            <label for="otherPeerId">Other Peer ID</label>
+            <input id="otherPeerId">
+            <input type="button" id="connect" disabled value="Connect"></button>
+        </form>
+    </div>
 </body>
 <script src="simplepeer.min.js"></script>
 <script src="peer.js"></script>
+
 </html>

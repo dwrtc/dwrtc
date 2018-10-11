@@ -7,17 +7,17 @@ class SignalingMessage {
   }
 }
 
-let id
 let socket
 
 window.onload = () => {
-  const websocketUrl = "ws://localhost:7000/ws"
-  let simplePeer = window.SimplePeer
-  socket = new WebSocket(websocketUrl)
-  socket.onopen = _ => setupSocket()
+  simplePeer = window.SimplePeer
+  setupSocket()
 }
 
 const setupSocket = () => {
+  console.debug("Setting up websocket")
+  const websocketUrl = "ws://localhost:7000/ws"
+  socket = new WebSocket(websocketUrl)
   socket.onmessage = event =>
     onMessage(
       event,
@@ -28,7 +28,8 @@ const setupSocket = () => {
   socket.onclose = event =>
     console.log(`OnClose (Reason ${event.reason}, Code ${event.code})`)
   socket.onerror = event => console.log(`OnError ${event}`)
-  setupPeer()
+  console.debug("Setting up websocket COMPLETE")
+  socket.onopen = event => onWebsocketOpen(event)
 }
 
 const onMessage = (
@@ -38,21 +39,27 @@ const onMessage = (
   onSignalingMessage
 ) => {
   let message = JSON.parse(event.data)
+  let debugMessage = "New message, type: "
   switch (message.type) {
     case "WebsocketIdMessage":
+      console.debug(debugMessage + "WebsocketIdMessage")
       onWebsocketIdMessage(message)
       break
     case "WebsocketErrorMessage":
+      console.debug(debugMessage + "WebsocketErrorMessage")
       onWebsocketErrorMessage(message)
       break
     case "SignalingMessage":
+      console.debug(debugMessage + "SignalingMessage")
       onSignalingMessage(message)
       break
+    default:
+      console.error(debugMessage + "UNKNOWN")
   }
 }
 
 const onWebsocketIdMessage = message => {
-  id = message.id
+  const id = message.id
   console.log(`ID: ${id}`)
 }
 
@@ -68,9 +75,39 @@ const onSignalingMessage = message => {
   )
 }
 
+const onWebsocketOpen = event => {
+  console.debug("Websocket is open")
+  // sendTestMessage();
+  setPageReady()
+}
+
+const connectClicked = event => {
+  event.preventDefault()
+  console.debug("Connect is clicked")
+  setupPeer()
+}
 const setupPeer = () => {
+  const simplePeer = window.SimplePeer
+
+  console.debug("Setting up SimplePeer")
+  const isInitiator = document.getElementById("initiator").checked
+  const otherPeerId = document.getElementById("otherPeerId").value
+  console.debug(`Is initiator? ${isInitiator}`)
+  console.debug(`Other Peer ID: ${otherPeerId}`)
+
+  console.debug("Setting up SimplePeer COMPLETE")
+}
+
+const setPageReady = () => {
+  console.debug("Page is ready")
+  const connectButton = document.getElementById("connect")
+  connectButton.onclick = connectClicked
+  connectButton.disabled = false
+}
+
+function sendTestMessage() {
   let message = new SignalingMessage(
-    "d9c3c68f-64ed-4abb-9009-3f0f044adfda",
+    "9c445770-deaa-4f8c-8e6e-60c575515ed4",
     "Blablabla"
   )
   socket.send(JSON.stringify(message))
