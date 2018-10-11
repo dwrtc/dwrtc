@@ -76,6 +76,9 @@ const onSignalingMessage = message => {
   )
   otherPeerId = message.senderSessionId
   console.debug(`Set otherPeerId to ${otherPeerId}`)
+  const data = JSON.parse(message.messageBody)
+  // Send received message to our peer
+  peer.signal(data)
 }
 
 const onWebsocketOpen = event => {
@@ -111,6 +114,12 @@ const setupPeer = () => {
         console.debug(`Send Signal message: ${data}`)
         const message = new SignalingMessage(otherPeerId, JSON.stringify(data))
         socket.send(JSON.stringify(message))
+      })
+      peer.on("stream", function(stream) {
+        console.log("Got video stream!")
+        var video = document.querySelector("video")
+        video.src = window.URL.createObjectURL(stream)
+        video.play()
       })
     })
     .catch(function(err) {
