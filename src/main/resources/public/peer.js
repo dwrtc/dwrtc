@@ -8,6 +8,8 @@ class SignalingMessage {
 }
 
 let socket
+let peer
+let otherPeerId
 
 window.onload = () => {
   setupSocket()
@@ -72,6 +74,8 @@ const onSignalingMessage = message => {
       message.recipientSessionId
     }, Message: ${message.messageBody}`
   )
+  otherPeerId = message.senderSessionId
+  console.debug(`Set otherPeerId to ${otherPeerId}`)
 }
 
 const onWebsocketOpen = event => {
@@ -90,17 +94,21 @@ const setupPeer = () => {
 
   console.debug("Setting up SimplePeer")
   const isInitiator = document.getElementById("initiator").checked
-  const otherPeerId = document.getElementById("otherPeerId").value
   console.debug(`Is initiator? ${isInitiator}`)
-  console.debug(`Other Peer ID: ${otherPeerId}`)
+  if (isInitiator) {
+    console.debug("Setting initial otherPeerId")
+    otherPeerId = document.getElementById("otherPeerId").value
+    console.debug(`Other Peer ID: ${otherPeerId}`)
+  }
   navigator.mediaDevices
     .getUserMedia({ video: true, audio: true })
     .then(function(stream) {
       console.debug("Got user media")
-      const peer = new SimplePeer({ initiator: isInitiator, stream: stream })
+      peer = new SimplePeer({ initiator: isInitiator, stream: stream })
+
       peer.on("signal", data => {
         // Peer wants to send signalling data
-        console.debug(`Signal message: ${data}`)
+        console.debug(`Send Signal message: ${data}`)
         const message = new SignalingMessage(otherPeerId, JSON.stringify(data))
         socket.send(JSON.stringify(message))
       })
@@ -121,7 +129,7 @@ const setPageReady = () => {
   connectButton.disabled = false
 }
 
-function sendTestMessage() {
+const sendTestMessage = () => {
   let message = new SignalingMessage(
     "9c445770-deaa-4f8c-8e6e-60c575515ed4",
     "Blablabla"
