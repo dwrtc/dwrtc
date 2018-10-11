@@ -10,7 +10,6 @@ class SignalingMessage {
 let socket
 
 window.onload = () => {
-  simplePeer = window.SimplePeer
   setupSocket()
 }
 
@@ -87,14 +86,31 @@ const connectClicked = event => {
   setupPeer()
 }
 const setupPeer = () => {
-  const simplePeer = window.SimplePeer
+  const SimplePeer = window.SimplePeer
 
   console.debug("Setting up SimplePeer")
   const isInitiator = document.getElementById("initiator").checked
   const otherPeerId = document.getElementById("otherPeerId").value
   console.debug(`Is initiator? ${isInitiator}`)
   console.debug(`Other Peer ID: ${otherPeerId}`)
-
+  navigator.mediaDevices
+    .getUserMedia({ video: true, audio: true })
+    .then(function(stream) {
+      console.debug("Got user media")
+      const peer = new SimplePeer({ initiator: isInitiator, stream: stream })
+      peer.on("signal", data => {
+        // Peer wants to send signalling data
+        console.debug(`Signal message: ${data}`)
+        const message = new SignalingMessage(otherPeerId, JSON.stringify(data))
+        socket.send(JSON.stringify(message))
+      })
+    })
+    .catch(function(err) {
+      console.error(`Could not get user media or other error in setup, ${err}`)
+    })
+  // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+  // "It's possible for the returned promise to neither resolve nor reject,
+  // as the user is not required to make a choice at all and may simply ignore the request."
   console.debug("Setting up SimplePeer COMPLETE")
 }
 
