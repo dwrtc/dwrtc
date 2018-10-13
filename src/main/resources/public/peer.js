@@ -1,5 +1,11 @@
 "use strict"
 
+const WEBSOCKET_URL = "ws://localhost:7000/ws"
+
+const initiatorCheckbox = document.getElementById("initiator")
+const initialOtherPeerIdInput = document.getElementById("otherPeerId")
+const connectButton = document.getElementById("connect")
+
 class SignalingMessage {
   constructor(recipientSessionId, messageBody) {
     this.recipientSessionId = recipientSessionId
@@ -7,141 +13,177 @@ class SignalingMessage {
   }
 }
 
-let socket
-let peer
-let otherPeerId
-
+/**
+ * Onload. Setup the page interactions
+ */
 window.onload = () => {
-  setupSocket()
-}
-
-const setupSocket = () => {
-  console.debug("Setting up websocket")
-  const websocketUrl = "ws://localhost:7000/ws"
-  socket = new WebSocket(websocketUrl)
-  socket.onmessage = event =>
-    onMessage(
-      event,
-      onWebsocketIdMessage,
-      onWebsocketErrorMessage,
-      onSignalingMessage
-    )
-  socket.onclose = event =>
-    console.log(`OnClose (Reason ${event.reason}, Code ${event.code})`)
-  socket.onerror = event => console.log(`OnError ${event}`)
-  console.debug("Setting up websocket COMPLETE")
-  socket.onopen = event => onWebsocketOpen(event)
-}
-
-const onMessage = (
-  event,
-  onWebsocketIdMessage,
-  onWebsocketErrorMessage,
-  onSignalingMessage
-) => {
-  let message = JSON.parse(event.data)
-  let debugMessage = "New message, type: "
-  switch (message.type) {
-    case "WebsocketIdMessage":
-      console.debug(debugMessage + "WebsocketIdMessage")
-      onWebsocketIdMessage(message)
-      break
-    case "WebsocketErrorMessage":
-      console.debug(debugMessage + "WebsocketErrorMessage")
-      onWebsocketErrorMessage(message)
-      break
-    case "SignalingMessage":
-      console.debug(debugMessage + "SignalingMessage")
-      onSignalingMessage(message)
-      break
-    default:
-      console.error(debugMessage + "UNKNOWN")
+  initiatorCheckbox.onchange = () => {
+    initialOtherPeerIdInput.disabled = !initialOtherPeerIdInput.disabled
   }
-}
-
-const onWebsocketIdMessage = message => {
-  const id = message.id
-  console.log(`ID: ${id}`)
-}
-
-const onWebsocketErrorMessage = message => {
-  console.error(message.error)
-}
-
-const onSignalingMessage = message => {
-  console.log(
-    `Message. Sender: ${message.senderSessionId}, Recipient: ${
-      message.recipientSessionId
-    }, Message: ${message.messageBody}`
-  )
-  otherPeerId = message.senderSessionId
-  console.debug(`Set otherPeerId to ${otherPeerId}`)
-  const data = JSON.parse(message.messageBody)
-  // Send received message to our peer
-  peer.signal(data)
-}
-
-const onWebsocketOpen = event => {
-  console.debug("Websocket is open")
-  // sendTestMessage();
-  setPageReady()
-}
-
-const connectClicked = event => {
-  event.preventDefault()
-  console.debug("Connect is clicked")
-  setupPeer()
-}
-const setupPeer = () => {
-  const SimplePeer = window.SimplePeer
-
-  console.debug("Setting up SimplePeer")
-  const isInitiator = document.getElementById("initiator").checked
-  console.debug(`Is initiator? ${isInitiator}`)
-  if (isInitiator) {
-    console.debug("Setting initial otherPeerId")
-    otherPeerId = document.getElementById("otherPeerId").value
-    console.debug(`Other Peer ID: ${otherPeerId}`)
+  connectButton.onclick = event => {
+    event.preventDefault
+    startDwrtc()
   }
-  navigator.mediaDevices
-    .getUserMedia({ video: true, audio: true })
-    .then(function(stream) {
-      console.debug("Got user media")
-      peer = new SimplePeer({ initiator: isInitiator, stream: stream })
-
-      peer.on("signal", data => {
-        // Peer wants to send signalling data
-        console.debug(`Send Signal message: ${data}`)
-        const message = new SignalingMessage(otherPeerId, JSON.stringify(data))
-        socket.send(JSON.stringify(message))
-      })
-      peer.on("stream", function(stream) {
-        console.log("Got video stream!")
-        var video = document.querySelector("video")
-        video.srcObject = stream
-        video.play()
-      })
-    })
-    .catch(function(err) {
-      console.error(`Could not get user media or other error in setup, ${err}`)
-    })
-  // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
-  // "It's possible for the returned promise to neither resolve nor reject,
-  // as the user is not required to make a choice at all and may simply ignore the request."
-  console.debug("Setting up SimplePeer COMPLETE")
-}
-
-const setPageReady = () => {
-  console.debug("Page is ready")
-  const connectButton = document.getElementById("connect")
-  connectButton.onclick = connectClicked
   connectButton.disabled = false
 }
 
-const sendTestMessage = () => {
-  let message = new SignalingMessage(
-    "9c445770-deaa-4f8c-8e6e-60c575515ed4",
-    "Blablabla"
+/**
+ * Called when the user is ready. Sets up DWRTC.
+ */
+async function startDwrtc() {
+  console.log("Start DWRTC")
+  // lock
+  initiatorCheckbox.disabled = true
+  initialOtherPeerIdInput.disabled = true
+  connectButton.disabled = true
+  const dwrtc = new DWRTC(
+    initiatorCheckbox.checked,
+    initialOtherPeerIdInput.value
   )
-  socket.send(JSON.stringify(message))
+  await dwrtc.setup()
+}
+
+class DWRTC {
+  constructor(isInitiator, initialPeerId) {
+    this.isInitiator = isInitiator
+    if (this.isInitiator) {
+      this.otherPeerId = initialPeerId
+    }
+    console.log(
+      `Started DWRTC with isInitiator: ${isInitiator}, initialPeerId: ${initialPeerId}`
+    )
+  }
+
+  /**
+   * Sets the class up
+   * This is a separate method to the constructor, since constructors are not allowed to be async
+   */
+  async setup() {
+    await this.startSimplePeer()
+    await this.setupSocket()
+    this.completeSimplePeerSetup()
+  }
+
+  /**
+   * Initialize the peer with the information we have so far
+   */
+  async startSimplePeer() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      })
+      this.peer = new window.SimplePeer({
+        initiator: this.isInitiator,
+        stream: stream
+      })
+    } catch (error) {
+      throw error
+    }
+    // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+    // "It's possible for the returned promise to neither resolve nor reject,
+    // as the user is not required to make a choice at all and may simply ignore the request."
+    console.debug("SimplePeer started")
+  }
+
+  /** Initialize the websocket completely */
+  async setupSocket() {
+    this.socket = new WebSocket(WEBSOCKET_URL)
+
+    await new Promise(
+      function(resolve, reject) {
+        this.socket.onopen = _ => resolve()
+      }.bind(this)
+    )
+    this.socket.onclose = event =>
+      console.log(
+        `Websocket closed (Reason ${event.reason}, Code ${event.code})`
+      )
+    this.socket.onerror = event => console.log(`Websocket errored: (${event})`)
+
+    this.socket.onmessage = event => this.handleWebsocketMessage(event)
+    console.debug("Websocket set up")
+  }
+
+  /**
+   * Make the Simple Peer configuration complete
+   * This needs to run in a separate step than setupSimplePeer(), since we first need to set up the socket
+   */
+  completeSimplePeerSetup() {
+    this.peer.on("signal", data => {
+      // Peer wants to send signaling data
+      console.debug(`Send Signal message: ${data}`)
+      const message = new SignalingMessage(
+        this.otherPeerId,
+        JSON.stringify(data)
+      )
+      this.socket.send(JSON.stringify(message))
+    })
+    this.peer.on("stream", function(stream) {
+      console.log("Got video stream!")
+      var video = document.querySelector("video")
+      video.srcObject = stream
+      video.play()
+    })
+  }
+
+  /**
+   * Dispatch the incoming message
+   * @param {Object} rawMessage raw message from the websocket
+   */
+  handleWebsocketMessage(rawMessage) {
+    let message = JSON.parse(rawMessage.data)
+    let debugMessage = "New message, type: "
+    switch (message.type) {
+      case "WebsocketIdMessage":
+        console.debug(debugMessage + "WebsocketIdMessage")
+        this.handleWebsocketIdMessage(message)
+        break
+      case "WebsocketErrorMessage":
+        console.debug(debugMessage + "WebsocketErrorMessage")
+        this.handleWebsocketErrorMessage(message)
+        break
+      case "SignalingMessage":
+        console.debug(debugMessage + "SignalingMessage")
+        this.handleWebsocketSignalingMessage(message)
+        break
+      default:
+        console.error(debugMessage + "UNKNOWN")
+    }
+  }
+
+  /**
+   * Handle an ID message
+   * @param {Object} message an ID message
+   * @param {String} message.id the new ID
+   */
+  handleWebsocketIdMessage(message) {
+    console.debug(`ID: ${message.id}`)
+  }
+
+  /**
+   * Handle an error message
+   * @param {Object} message an error message
+   * @param {string} message.error the error reason
+   */
+  handleWebsocketErrorMessage(message) {
+    console.error(message.error)
+  }
+
+  /**
+   * Handle a signaling message
+   * @param {SignalingMessage} message a signaling message
+   */
+  handleWebsocketSignalingMessage(message) {
+    console.debug(
+      `Sender: ${message.senderSessionId}, Recipient: ${
+        message.recipientSessionId
+      }, Message: ${message.messageBody}`
+    )
+    this.otherPeerId = message.senderSessionId
+    console.debug(`Set otherPeerId to ${otherPeerId}`)
+    const data = JSON.parse(message.messageBody)
+    // Send received message to our peer
+    this.peer.signal(data)
+  }
 }
