@@ -1,6 +1,7 @@
 "use strict"
 
-const WEBSOCKET_URL = "ws://localhost:7000/ws"
+const wsProtocol = location.protocol === "https" ? "wss" : "ws" // in a perfect world, it's always wss
+const WEBSOCKET_URL = `${wsProtocol}://${location.host}/ws`
 
 const connectNormalButton = document.getElementById("connectNormal")
 const initialOtherPeerIdInput = document.getElementById("otherPeerId")
