@@ -90,6 +90,7 @@ class DWRTC {
   async setupSocket() {
     this.socket = new WebSocket(WEBSOCKET_URL)
 
+    // Dummy promise that we can resolve when the websocket is open
     await new Promise(
       function(resolve, reject) {
         this.socket.onopen = _ => resolve()
@@ -181,7 +182,7 @@ class DWRTC {
       }, Message: ${message.messageBody}`
     )
     this.otherPeerId = message.senderSessionId
-    console.debug(`Set otherPeerId to ${otherPeerId}`)
+    console.debug(`Set otherPeerId to ${this.otherPeerId}`)
     const data = JSON.parse(message.messageBody)
     // Send received message to our peer
     this.peer.signal(data)
