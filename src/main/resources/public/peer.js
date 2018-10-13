@@ -2,9 +2,9 @@
 
 const WEBSOCKET_URL = "ws://localhost:7000/ws"
 
-const initiatorCheckbox = document.getElementById("initiator")
+const connectNormalButton = document.getElementById("connectNormal")
 const initialOtherPeerIdInput = document.getElementById("otherPeerId")
-const connectButton = document.getElementById("connect")
+const connectToSessionButton = document.getElementById("connectToSession")
 
 class SignalingMessage {
   constructor(recipientSessionId, messageBody) {
@@ -17,29 +17,37 @@ class SignalingMessage {
  * Onload. Setup the page interactions
  */
 window.onload = () => {
-  initiatorCheckbox.onchange = () => {
-    initialOtherPeerIdInput.disabled = !initialOtherPeerIdInput.disabled
-  }
-  connectButton.onclick = event => {
+  connectNormalButton.onclick = event => {
     event.preventDefault
-    startDwrtc()
+    startDwrtc(false)
   }
-  connectButton.disabled = false
+  connectToSessionButton.onclick = event => {
+    event.preventDefault
+    startDwrtc(true, initialOtherPeerIdInput.value)
+  }
+  enableInput()
+}
+
+const enableInput = () => {
+  connectNormalButton.disabled = false
+  connectToSessionButton.disabled = false
+  console.log("Input enabled")
+}
+
+const lockInput = () => {
+  connectNormalButton.disabled = true
+  initialOtherPeerIdInput.disabled = true
+  connectToSessionButton.disabled = true
+  console.log("Input locked")
 }
 
 /**
  * Called when the user is ready. Sets up DWRTC.
  */
-async function startDwrtc() {
+async function startDwrtc(initiator, initialPeerId) {
   console.log("Start DWRTC")
-  // lock
-  initiatorCheckbox.disabled = true
-  initialOtherPeerIdInput.disabled = true
-  connectButton.disabled = true
-  const dwrtc = new DWRTC(
-    initiatorCheckbox.checked,
-    initialOtherPeerIdInput.value
-  )
+  lockInput()
+  const dwrtc = new DWRTC(initiator, initialPeerId)
   await dwrtc.setup()
 }
 
@@ -73,6 +81,9 @@ class DWRTC {
         video: true,
         audio: true
       })
+      const yourVideo = document.getElementById("yourVideo")
+      yourVideo.srcObject = stream
+      yourVideo.play()
       this.peer = new window.SimplePeer({
         initiator: this.isInitiator,
         stream: stream
@@ -122,9 +133,9 @@ class DWRTC {
     })
     this.peer.on("stream", function(stream) {
       console.log("Got video stream!")
-      var video = document.querySelector("video")
-      video.srcObject = stream
-      video.play()
+      const otherVideo = document.getElementById("otherVideo")
+      otherVideo.srcObject = stream
+      otherVideo.play()
     })
   }
 

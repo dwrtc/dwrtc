@@ -10,15 +10,20 @@
 <body>
     <div>
         <form>
-            <label for="initiator">Initiator</label>
-            <input type="checkbox" id="initiator">
-            <label for="otherPeerId">Other Peer ID</label>
-            <input id="otherPeerId" disabled>
-            <input type="button" id="connect" disabled value="Start connection"></button>
+            <div>
+                <input type="button" id="connectNormal" value="Start new connection"></button>
+            </div>
+            <div>
+                <label for="otherPeerId">Other Peer ID</label>
+                <input id="otherPeerId">
+                <input type="button" id="connectToSession" value="Connect to session"></button>
+            </div>
         </form>
     </div>
-    <p id="id"></p>
-    <video></video>
+    <h1>Your video</h1>
+    <video id="yourVideo"></video>
+    <h1>Other video</h1>
+    <video id="otherVideo"></video>
 </body>
 <script src="simplepeer-9.0.0.min.js"></script>
 <script src="peer.js"></script>
