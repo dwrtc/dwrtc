@@ -6,6 +6,13 @@ const connectNormalButton = document.getElementById("connectNormal")
 const initialOtherPeerIdInput = document.getElementById("otherPeerId")
 const connectToSessionButton = document.getElementById("connectToSession")
 
+const input = document.getElementById("input")
+const output = document.getElementById("output")
+const idMessage = document.getElementById("idMessage")
+const idValue = document.getElementById("idValue")
+const yourVideo = document.getElementById("yourVideo")
+const otherVideo = document.getElementById("otherVideo")
+
 class SignalingMessage {
   constructor(recipientSessionId, messageBody) {
     this.recipientSessionId = recipientSessionId
@@ -28,25 +35,29 @@ window.onload = () => {
   enableInput()
 }
 
-const enableInput = () => {
-  connectNormalButton.disabled = false
-  connectToSessionButton.disabled = false
-  console.log("Input enabled")
+const showOutput = () => {
+  output.hidden = false
+  // if the css is "display: grid" initially, this overrides the hidden attribute
+  // therefore, we have to unhide it and add the proper class
+  output.classList.add("grid")
 }
 
-const lockInput = () => {
-  connectNormalButton.disabled = true
-  initialOtherPeerIdInput.disabled = true
-  connectToSessionButton.disabled = true
-  console.log("Input locked")
+const showOtherVideo = () => {
+  otherVideo.hidden = false
+  idMessage.hidden = true
 }
+
+const enableInput = () => (input.hidden = false)
+
+const disableInput = () => (input.hidden = true)
 
 /**
  * Called when the user is ready. Sets up DWRTC.
  */
 async function startDwrtc(initiator, initialPeerId) {
   console.log("Start DWRTC")
-  lockInput()
+  disableInput()
+  showOutput()
   const dwrtc = new DWRTC(initiator, initialPeerId)
   await dwrtc.setup()
 }
@@ -81,9 +92,9 @@ class DWRTC {
         video: true,
         audio: true
       })
-      const yourVideo = document.getElementById("yourVideo")
       yourVideo.srcObject = stream
       yourVideo.play()
+      yourVideo.muted = true
       this.peer = new window.SimplePeer({
         initiator: this.isInitiator,
         stream: stream
@@ -133,7 +144,7 @@ class DWRTC {
     })
     this.peer.on("stream", function(stream) {
       console.log("Got video stream!")
-      const otherVideo = document.getElementById("otherVideo")
+      showOtherVideo()
       otherVideo.srcObject = stream
       otherVideo.play()
     })
@@ -170,7 +181,9 @@ class DWRTC {
    * @param {String} message.id the new ID
    */
   handleWebsocketIdMessage(message) {
-    console.debug(`ID: ${message.id}`)
+    const id = message.id
+    console.debug(`ID: ${id}`)
+    idValue.textContent = id
   }
 
   /**

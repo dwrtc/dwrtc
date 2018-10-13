@@ -8,7 +8,7 @@
 </head>
 
 <body>
-    <div>
+    <div id="input" hidden>
         <form>
             <div>
                 <input type="button" id="connectNormal" value="Start new connection"></button>
@@ -20,10 +20,11 @@
             </div>
         </form>
     </div>
-    <h1>Your video</h1>
-    <video id="yourVideo"></video>
-    <h1>Other video</h1>
-    <video id="otherVideo"></video>
+    <div id="output" hidden>
+        <video id="otherVideo" hidden class="top"></video>
+        <p class="top" id="idMessage">Tell your partner to connect to <span id="idValue"></span></p>
+        <video id="yourVideo"></video>
+    </div>
 </body>
 <script src="simplepeer-9.0.0.min.js"></script>
 <script src="peer.js"></script>

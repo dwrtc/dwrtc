@@ -1,3 +1,30 @@
 input[type="button"]:disabled {
   color: grey;
 }
+
+video {
+  object-fit: contain;
+  height: 100%;
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  height: 100vh;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: 2fr 1fr;
+  grid-gap: 1px 1px;
+  grid-template-areas: "otherVideo otherVideo otherVideo" ". yourVideo .";
+}
+
+#idMessage {
+  margin: auto;
+}
+
+.top {
+  grid-area: otherVideo;
+}
+
+#yourVideo {
+  grid-area: yourVideo;
+}
