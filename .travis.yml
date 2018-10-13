@@ -4,6 +4,11 @@ install: true
 jdk:
 - openjdk10
 
+addons:
+  sonarcloud:
+    organization: $SONAR_ORGANZATION # the key of the org you chose at step #3
+    token: $SONAR_LOGIN_TOKEN
+
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
