@@ -11,8 +11,12 @@ const input = document.getElementById("input")
 const output = document.getElementById("output")
 const idMessage = document.getElementById("idMessage")
 const idValue = document.getElementById("idValue")
+const idCopy = document.getElementById("idCopy")
 const yourVideo = document.getElementById("yourVideo")
 const otherVideo = document.getElementById("otherVideo")
+
+const errorOverlay = document.getElementById("errorOverlay")
+const errorMessage = document.getElementById("errorMessage")
 
 class SignalingMessage {
   constructor(recipientSessionId, messageBody) {
@@ -26,12 +30,19 @@ class SignalingMessage {
  */
 window.onload = () => {
   connectNormalButton.onclick = event => {
-    event.preventDefault
+    event.preventDefault()
     startDwrtc(false)
   }
   connectToSessionButton.onclick = event => {
-    event.preventDefault
+    event.preventDefault()
     startDwrtc(true, initialOtherPeerIdInput.value)
+    hideIdMessage()
+  }
+  idCopy.onclick = event => {
+    event.preventDefault()
+    idValue.select()
+    document.execCommand("copy")
+    idCopy.textContent = "Copied!"
   }
   enableInput()
 }
@@ -43,14 +54,29 @@ const showOutput = () => {
   output.classList.add("grid")
 }
 
+const hideIdMessage = () => {
+  idMessage.hidden = true
+}
+
 const showOtherVideo = () => {
   otherVideo.hidden = false
-  idMessage.hidden = true
+  hideIdMessage()
+}
+
+const copyIdToClipboard = () => {
+  idValue.select()
+  document.execCommand("copy")
 }
 
 const enableInput = () => (input.hidden = false)
 
 const disableInput = () => (input.hidden = true)
+
+const showError = error => {
+  errorOverlay.hidden = false
+  errorOverlay.classList.add("fade-in")
+  errorMessage.textContent = error
+}
 
 /**
  * Called when the user is ready. Sets up DWRTC.
@@ -184,7 +210,7 @@ class DWRTC {
   handleWebsocketIdMessage(message) {
     const id = message.id
     console.debug(`ID: ${id}`)
-    idValue.textContent = id
+    idValue.value = id
   }
 
   /**
@@ -193,7 +219,11 @@ class DWRTC {
    * @param {string} message.error the error reason
    */
   handleWebsocketErrorMessage(message) {
-    console.error(message.error)
+    const error = message.error
+    console.error(error)
+    const errorSuffix =
+      "Kindly reload the page and try again with another input"
+    showError(`${error}. ${errorSuffix}.`)
   }
 
   /**

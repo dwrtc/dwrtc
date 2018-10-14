@@ -1,5 +1,5 @@
-input[type="button"]:disabled {
-  color: grey;
+#input {
+  padding: 12em;
 }
 
 video {
@@ -12,7 +12,7 @@ video {
   display: grid;
   height: 100vh;
   grid-template-columns: 1fr 2fr 1fr;
-  grid-template-rows: 2fr 1fr;
+  grid-template-rows: 3fr 1fr;
   grid-gap: 1px 1px;
   grid-template-areas: "otherVideo otherVideo otherVideo" ". yourVideo .";
 }
@@ -27,4 +27,16 @@ video {
 
 #yourVideo {
   grid-area: yourVideo;
+}
+
+#errorOverlay {
+  position: fixed;
+  bottom: 0;
+  left: 10%;
+  height: 10%;
+  width: 80%;
+  z-index: 10;
+  padding-left: 1em;
+  padding-right: 1em;
+  background-color: #dc3545; /* .bg-danger from Bootstrap */
 }
