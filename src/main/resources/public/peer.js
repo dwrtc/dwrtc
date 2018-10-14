@@ -184,7 +184,7 @@ class DWRTC {
       )
       this.socket.send(JSON.stringify(message))
     })
-    this.peer.on("stream", function(stream) {
+    this.peer.on("stream", stream => {
       console.log("Got video stream!")
       showOtherVideo()
       otherVideo.srcObject = stream
