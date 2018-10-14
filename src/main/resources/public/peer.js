@@ -143,12 +143,7 @@ class DWRTC {
   async setupSocket() {
     this.socket = new WebSocket(websocketUrl)
 
-    // Dummy promise that we can resolve when the websocket is open
-    await new Promise(
-      function(resolve, reject) {
-        this.socket.onopen = _ => resolve()
-      }.bind(this)
-    )
+    await this.websocketIsReady()
     this.socket.onclose = event => {
       const message = `Websocket closed (Reason ${event.reason}, Code ${
         event.code
@@ -165,6 +160,14 @@ class DWRTC {
 
     this.socket.onmessage = event => this.handleWebsocketMessage(event)
     console.debug("Websocket set up")
+  }
+
+  async websocketIsReady() {
+    await new Promise(
+      function(resolve, reject) {
+        this.socket.onopen = _ => resolve()
+      }.bind(this)
+    )
   }
 
   /**
