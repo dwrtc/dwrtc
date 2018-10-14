@@ -6,6 +6,7 @@ const WEBSOCKET_URL = `${wsProtocol}://${location.host}/ws`
 const connectNormalButton = document.getElementById("connectNormal")
 const initialOtherPeerIdInput = document.getElementById("otherPeerId")
 const connectToSessionButton = document.getElementById("connectToSession")
+const connectToSessionForm = document.getElementById("connectToSessionForm")
 
 const input = document.getElementById("input")
 const output = document.getElementById("output")
@@ -34,9 +35,12 @@ window.onload = () => {
     startDwrtc(false)
   }
   connectToSessionButton.onclick = event => {
-    event.preventDefault()
-    startDwrtc(true, initialOtherPeerIdInput.value)
-    hideIdMessage()
+    if (connectToSessionForm.checkValidity()) {
+      // Allow HTML5 form validation to take place
+      event.preventDefault()
+      startDwrtc(true, initialOtherPeerIdInput.value)
+      hideIdMessage()
+    }
   }
   idCopy.onclick = event => {
     event.preventDefault()
@@ -145,11 +149,19 @@ class DWRTC {
         this.socket.onopen = _ => resolve()
       }.bind(this)
     )
-    this.socket.onclose = event =>
-      console.log(
-        `Websocket closed (Reason ${event.reason}, Code ${event.code})`
-      )
-    this.socket.onerror = event => console.log(`Websocket errored: (${event})`)
+    this.socket.onclose = event => {
+      const message = `Websocket closed (Reason ${event.reason}, Code ${
+        event.code
+      })`
+      console.error(message)
+      showError(message)
+    }
+
+    this.socket.onerror = event => {
+      const message = `Websocket errored: (${event})`
+      console.error(message)
+      showError(message)
+    }
 
     this.socket.onmessage = event => this.handleWebsocketMessage(event)
     console.debug("Websocket set up")
