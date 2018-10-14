@@ -1,7 +1,7 @@
 "use strict"
 
 const wsProtocol = location.protocol === "https" ? "wss" : "ws" // in a perfect world, it's always wss
-const WEBSOCKET_URL = `${wsProtocol}://${location.host}/ws`
+const websocketUrl = `${wsProtocol}://${location.host}/ws`
 
 const connectNormalButton = document.getElementById("connectNormal")
 const initialOtherPeerIdInput = document.getElementById("otherPeerId")
@@ -141,7 +141,7 @@ class DWRTC {
 
   /** Initialize the websocket completely */
   async setupSocket() {
-    this.socket = new WebSocket(WEBSOCKET_URL)
+    this.socket = new WebSocket(websocketUrl)
 
     // Dummy promise that we can resolve when the websocket is open
     await new Promise(
