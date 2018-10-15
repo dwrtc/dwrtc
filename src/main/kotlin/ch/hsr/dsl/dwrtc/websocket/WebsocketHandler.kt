@@ -8,6 +8,8 @@ import io.javalin.websocket.WsSession
 import mu.KLogging
 import java.util.concurrent.ConcurrentHashMap
 
+const val IDLE_TIMEOUT_MS: Long = 15 * 60 * 1000
+
 class WebsocketHandler(app: Javalin, private val signallingService: ClientService) {
     companion object : KLogging()
 
@@ -26,6 +28,8 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
     private fun connect(session: WsSession) {
         logger.info { "create client for session ${session.id}" }
 
+        session.idleTimeout = IDLE_TIMEOUT_MS
+
         sessions[session.id] = session
 
         val client = signallingService.addClient(session.id)
@@ -43,7 +47,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
             val recipient = signallingService.findClient(messageDto.recipientSessionId!!)
             clients[session.id]?.let { it.sendMessage(messageDto.messageBody, recipient) }
         } catch (e: SignalingException) {
-            session.send(toJson(WebsocketErrorMessage(e.message)))
+            session.send(toJson(WebsocketErrorMessage(e.message!!)))
         }
     }
 
