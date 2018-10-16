@@ -3,9 +3,7 @@
 const wsProtocol = location.protocol === "https" ? "wss" : "ws" // in a perfect world, it's always wss
 const websocketUrl = `${wsProtocol}://${location.host}/ws`
 
-const elements = []
-// TODO why does this need to be a named constant? "inline" doesn't seem to work
-const elementIds = [
+const elements = [
   "connectNormal",
   "otherPeerId",
   "connectToSession",
@@ -19,8 +17,7 @@ const elementIds = [
   "otherVideo",
   "errorOverlay",
   "errorMessage"
-]
-elementIds.forEach(e => (elements[e] = document.getElementById(e)))
+].map(e => document.getElementById(e))
 
 class SignalingMessage {
   constructor(recipientSessionId, messageBody) {
