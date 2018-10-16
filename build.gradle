@@ -17,7 +17,7 @@ ext {
     kotlinLoggingVersion = "1.6.+"
     kotlinTestVersion = "3.1.+"
     konfigVersion = "1.6.10.+"
-
+    http4kVersion = "3.39.1"
 }
 
 repositories {
@@ -44,6 +44,8 @@ dependencies {
 
     compile "com.natpryce:konfig:${konfigVersion}"
 
+    testCompile "org.http4k:http4k-core:${http4kVersion}"
+    testCompile "org.http4k:http4k-client-websocket:${http4kVersion}"
     testCompile "io.kotlintest:kotlintest-runner-junit5:${kotlinTestVersion}"
 }
 test {
