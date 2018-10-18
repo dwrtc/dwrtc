@@ -1,7 +1,7 @@
 "use strict"
 
 const wsProtocol = location.protocol === "https" ? "wss" : "ws" // in a perfect world, it's always wss
-const websocketUrl = `${wsProtocol}://${location.host}/ws`
+const webSocketUrl = `${wsProtocol}://${location.host}/ws`
 
 const elements = [
   "connectNormal",
@@ -138,9 +138,9 @@ class DWRTC {
 
   /** Initialize the websocket completely */
   async setupSocket() {
-    this.socket = new WebSocket(websocketUrl)
+    this.socket = new WebSocket(webSocketUrl)
 
-    await this.websocketIsReady()
+    await this.webSocketIsReady()
     this.socket.onclose = event => {
       const message = `Websocket closed (Reason ${event.reason}, Code ${
         event.code
@@ -155,11 +155,11 @@ class DWRTC {
       showError(message)
     }
 
-    this.socket.onmessage = event => this.handleWebsocketMessage(event)
+    this.socket.onmessage = event => this.handleWebSocketMessage(event)
     console.debug("Websocket set up")
   }
 
-  async websocketIsReady() {
+  async webSocketIsReady() {
     await new Promise(
       function(resolve, reject) {
         this.socket.onopen = _ => resolve()
@@ -193,21 +193,21 @@ class DWRTC {
    * Dispatch the incoming message
    * @param {Object} rawMessage raw message from the websocket
    */
-  handleWebsocketMessage(rawMessage) {
+  handleWebSocketMessage(rawMessage) {
     let message = JSON.parse(rawMessage.data)
     let debugMessage = "New message, type: "
     switch (message.type) {
-      case "WebsocketIdMessage":
-        console.debug(debugMessage + "WebsocketIdMessage")
-        this.handleWebsocketIdMessage(message)
+      case "WebSocketIdMessage":
+        console.debug(debugMessage + "WebSocketIdMessage")
+        this.handleWebSocketIdMessage(message)
         break
-      case "WebsocketErrorMessage":
-        console.debug(debugMessage + "WebsocketErrorMessage")
-        this.handleWebsocketErrorMessage(message)
+      case "WebSocketErrorMessage":
+        console.debug(debugMessage + "WebSocketErrorMessage")
+        this.handleWebSocketErrorMessage(message)
         break
       case "SignalingMessage":
         console.debug(debugMessage + "SignalingMessage")
-        this.handleWebsocketSignalingMessage(message)
+        this.handleWebSocketSignalingMessage(message)
         break
       default:
         console.error(debugMessage + "UNKNOWN")
@@ -219,7 +219,7 @@ class DWRTC {
    * @param {Object} message an ID message
    * @param {String} message.id the new ID
    */
-  handleWebsocketIdMessage(message) {
+  handleWebSocketIdMessage(message) {
     const id = message.id
     console.debug(`ID: ${id}`)
     elements["idValue"].value = id
@@ -230,7 +230,7 @@ class DWRTC {
    * @param {Object} message an error message
    * @param {string} message.error the error reason
    */
-  handleWebsocketErrorMessage(message) {
+  handleWebSocketErrorMessage(message) {
     const error = message.error
     console.error(error)
     const errorSuffix =
@@ -242,7 +242,7 @@ class DWRTC {
    * Handle a signaling message
    * @param {SignalingMessage} message a signaling message
    */
-  handleWebsocketSignalingMessage(message) {
+  handleWebSocketSignalingMessage(message) {
     console.debug(
       `Sender: ${message.senderSessionId}, Recipient: ${
         message.recipientSessionId

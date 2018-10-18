@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 const val IDLE_TIMEOUT_MS: Long = 15 * 60 * 1000
 const val WEBSOCKET_PATH = "/ws"
 
-class WebsocketHandler(app: Javalin, private val signallingService: ClientService) {
+class WebSocketHandler(app: Javalin, private val signallingService: ClientService) {
     companion object : KLogging()
 
     private val clients = ConcurrentHashMap<String, InternalClient>()
@@ -21,7 +21,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
     init {
         app.ws(WEBSOCKET_PATH) { ws ->
             ws.onConnect { session -> connect(session) }
-            ws.onMessage { session, message -> onReceiveMessageFromWebsocket(session, message) }
+            ws.onMessage { session, message -> onReceiveMessageFromWebSocket(session, message) }
             ws.onClose { session, _, reason -> close(session, reason) }
             ws.onError { _, _ -> logger.info { "Errored" } }
         }
@@ -38,11 +38,11 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         client.onReceiveMessage { sender, messageDto -> onReceiveMessageFromSignaling(sender, messageDto) }
         clients[session.id] = client
 
-        val message = WebsocketIdMessage(session.id)
+        val message = WebSocketIdMessage(session.id)
         session.send(toJson(message))
     }
 
-    private fun onReceiveMessageFromWebsocket(session: WsSession, message: String) {
+    private fun onReceiveMessageFromWebSocket(session: WsSession, message: String) {
         val messageDto = jsonTo<SignalingMessage>(message)
         messageDto.senderSessionId = session.id
 
@@ -50,7 +50,7 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
             val recipient = signallingService.findClient(messageDto.recipientSessionId!!)
             clients[session.id]?.let { it.sendMessage(messageDto.messageBody, recipient) }
         } catch (e: SignalingException) {
-            session.send(toJson(WebsocketErrorMessage(e.message!!)))
+            session.send(toJson(WebSocketErrorMessage(e.message!!)))
         }
     }
 
