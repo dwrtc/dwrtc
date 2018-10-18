@@ -22,8 +22,8 @@ class WebsocketHandler(app: Javalin, private val signallingService: ClientServic
         app.ws(WEBSOCKET_PATH) { ws ->
             ws.onConnect { session -> connect(session) }
             ws.onMessage { session, message -> onReceiveMessageFromWebsocket(session, message) }
-            ws.onClose { session, statusCode, reason -> close(session, reason) }
-            ws.onError { session, throwable -> logger.info { "Errored" } }
+            ws.onClose { session, _, reason -> close(session, reason) }
+            ws.onError { _, _ -> logger.info { "Errored" } }
         }
     }
 
