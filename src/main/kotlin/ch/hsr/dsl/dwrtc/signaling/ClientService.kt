@@ -3,12 +3,14 @@ package ch.hsr.dsl.dwrtc.signaling
 import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
 import ch.hsr.dsl.dwrtc.util.findFreePort
+import ch.hsr.dsl.dwrtc.util.onSuccess
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+
 
 class ClientService constructor(peerPort: Int? = findFreePort()) {
     companion object : KLogging()
@@ -30,7 +32,8 @@ class ClientService constructor(peerPort: Int? = findFreePort()) {
 
     constructor(bootstrapPeerAddress: PeerAddress, peerPort: Int? = findFreePort()) : this(peerPort) {
         logger.info { "bootstrapping with address:$bootstrapPeerAddress" }
-        bootstrapPeer(bootstrapPeerAddress)
+        bootstrapPeer(bootstrapPeerAddress).onSuccess { logger.info { "bootstrapping completed" } }
+
     }
 
     constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this(peerPort) {
