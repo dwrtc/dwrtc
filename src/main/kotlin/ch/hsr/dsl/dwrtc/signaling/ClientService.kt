@@ -10,18 +10,15 @@ import net.tomp2p.peers.PeerAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class ClientService constructor() {
+class ClientService constructor(peerPort: Int? = findFreePort()) {
     companion object : KLogging()
 
     private val peerId = UUID.randomUUID().toString()
-    internal lateinit var peer: PeerDHT
+    internal var peer: PeerDHT
     private val emitterMap = ConcurrentHashMap<String, (ExternalClient, SignalingMessage) -> Unit>()
 
-    constructor(bootstrapPeerAddress: PeerAddress) : this() {
-        logger.info { "using bootstrap peer (TomP2P format) $bootstrapPeerAddress" }
-
-        this.peer = buildNewPeer(peerId)
-        bootstrapPeer(bootstrapPeerAddress)
+    init {
+        this.peer = buildNewPeer(peerId, peerPort ?: findFreePort())
 
         logger.info {
             "creating service with peer id $peerId at port " +
@@ -31,20 +28,16 @@ class ClientService constructor() {
         setupDirectMessageListener()
     }
 
-    constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this() {
-        val port = peerPort ?: findFreePort()
-        this.peer = buildNewPeer(peerId, port)
+    constructor(bootstrapPeerAddress: PeerAddress, peerPort: Int? = findFreePort()) : this(peerPort) {
+        logger.info { "bootstrapping with address:$bootstrapPeerAddress" }
+        bootstrapPeer(bootstrapPeerAddress)
+    }
 
+    constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this(peerPort) {
         if (bootstrapIp != null && bootstrapPort != null) {
+            logger.info { "bootstrapping with $bootstrapIp:$bootstrapPort" }
             bootstrapPeer(PeerConnectionDetails(bootstrapIp, bootstrapPort))
         }
-
-        logger.info {
-            "creating service with peer id $peerId at port " +
-                    "${peer.peerAddress().tcpPort()} (TCP)/${peer.peerAddress().udpPort()} (UDP)"
-        }
-
-        setupDirectMessageListener()
     }
 
     fun addClient(sessionId: String): InternalClient {
