@@ -2,20 +2,27 @@ package ch.hsr.dsl.dwrtc.signaling
 
 import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
+import ch.hsr.dsl.dwrtc.util.findFreePort
 import mu.KLogging
+import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class ClientService() {
+class ClientService constructor() {
     companion object : KLogging()
 
     private val peerId = UUID.randomUUID().toString()
-    internal val peer = buildNewPeer(peerId)
+    internal lateinit var peer: PeerDHT
     private val emitterMap = ConcurrentHashMap<String, (ExternalClient, SignalingMessage) -> Unit>()
 
-    init {
+    constructor(bootstrapPeerAddress: PeerAddress) : this() {
+        logger.info { "using bootstrap peer (TomP2P format) $bootstrapPeerAddress" }
+
+        this.peer = buildNewPeer(peerId)
+        bootstrapPeer(bootstrapPeerAddress)
+
         logger.info {
             "creating service with peer id $peerId at port " +
                     "${peer.peerAddress().tcpPort()} (TCP)/${peer.peerAddress().udpPort()} (UDP)"
@@ -24,45 +31,20 @@ class ClientService() {
         setupDirectMessageListener()
     }
 
-    private fun setupDirectMessageListener() {
-        fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {
-            val recipientSessionId = signalingMessage.recipientSessionId!!
-            val senderSessionId = signalingMessage.senderSessionId!!
-            emitterMap[recipientSessionId]?.let {
-                logger.info { "message accepted, found emitter for $recipientSessionId" }
-                it(ExternalClient(senderSessionId, senderPeerAddress), signalingMessage)
-            } ?: run {
-                logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
-            }
+    constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this() {
+        val port = peerPort ?: findFreePort()
+        this.peer = buildNewPeer(peerId, port)
+
+        if (bootstrapIp != null && bootstrapPort != null) {
+            bootstrapPeer(PeerConnectionDetails(bootstrapIp, bootstrapPort))
         }
 
-        fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
-            logger.info { "got message $messageDto" }
-            return if (messageDto is SignalingMessage) {
-                dispatchMessage(messageDto, senderPeerAddress)
-                messageDto
-            } else {
-                logger.info { "message discarded (not a message dto)" }
-            }
+        logger.info {
+            "creating service with peer id $peerId at port " +
+                    "${peer.peerAddress().tcpPort()} (TCP)/${peer.peerAddress().udpPort()} (UDP)"
         }
 
-        peer.peer().objectDataReply { senderPeerAddress, messageDto ->
-            tryDispatchingMessage(messageDto, senderPeerAddress)
-        }
-    }
-
-    constructor(bootstrapPeerAddress: PeerConnectionDetails) : this() {
-        logger.info { "using bootstrap peer $bootstrapPeerAddress" }
-
-        peer.peer().bootstrap().inetAddress(bootstrapPeerAddress.ipAddress).ports(bootstrapPeerAddress.port).start()
-                .awaitListeners()
-    }
-
-    constructor(bootstrapPeerAddress: PeerAddress) : this() {
-        logger.info { "using bootstrap peer (TomP2P format) $bootstrapPeerAddress" }
-
-        peer.peer().bootstrap().peerAddress(bootstrapPeerAddress).start()
-                .awaitListeners()
+        setupDirectMessageListener()
     }
 
     fun addClient(sessionId: String): InternalClient {
@@ -94,5 +76,43 @@ class ClientService() {
 
     internal fun addDirectMessageListener(sessionId: String, emitter: (ExternalClient, SignalingMessage) -> Unit) {
         emitterMap[sessionId] = emitter
+    }
+
+    private fun bootstrapPeer(peerAddress: PeerAddress) = peer.peer()
+        .bootstrap()
+        .peerAddress(peerAddress)
+        .start().awaitListeners()
+
+    private fun bootstrapPeer(peerDetails: PeerConnectionDetails) = peer.peer()
+        .bootstrap()
+        .inetAddress(peerDetails.ipAddress)
+        .ports(peerDetails.port)
+        .start().awaitListeners()
+
+    private fun setupDirectMessageListener() {
+        fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {
+            val recipientSessionId = signalingMessage.recipientSessionId!!
+            val senderSessionId = signalingMessage.senderSessionId!!
+            emitterMap[recipientSessionId]?.let {
+                logger.info { "message accepted, found emitter for $recipientSessionId" }
+                it(ExternalClient(senderSessionId, senderPeerAddress), signalingMessage)
+            } ?: run {
+                logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
+            }
+        }
+
+        fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
+            logger.info { "got message $messageDto" }
+            return if (messageDto is SignalingMessage) {
+                dispatchMessage(messageDto, senderPeerAddress)
+                messageDto
+            } else {
+                logger.info { "message discarded (not a message dto)" }
+            }
+        }
+
+        peer.peer().objectDataReply { senderPeerAddress, messageDto ->
+            tryDispatchingMessage(messageDto, senderPeerAddress)
+        }
     }
 }
