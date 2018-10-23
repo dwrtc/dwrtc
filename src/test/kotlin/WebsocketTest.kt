@@ -1,9 +1,9 @@
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.WebsocketIdMessage
+import ch.hsr.dsl.dwrtc.signaling.WebSocketIdMessage
 import ch.hsr.dsl.dwrtc.util.findFreePort
 import ch.hsr.dsl.dwrtc.util.jsonTo
 import ch.hsr.dsl.dwrtc.websocket.WEBSOCKET_PATH
-import ch.hsr.dsl.dwrtc.websocket.WebsocketHandler
+import ch.hsr.dsl.dwrtc.websocket.WebSocketHandler
 import io.javalin.Javalin
 import io.kotlintest.TestCaseOrder
 import io.kotlintest.extensions.TestListener
@@ -15,7 +15,7 @@ import mu.KLogging
 import org.http4k.client.WebsocketClient
 import org.http4k.core.Uri
 
-class WebsocketTest : WordSpec(), TestListener {
+class WebSocketTest : WordSpec(), TestListener {
     companion object : KLogging()
 
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
@@ -27,7 +27,7 @@ class WebsocketTest : WordSpec(), TestListener {
 
     init {
         "the initial message" should {
-            WebsocketHandler(app, service)
+            WebSocketHandler(app, service)
             val client = WebsocketClient.blocking(wsUri)
             val firstMessageString = client.received().take(1).toList().first().bodyString()
 
@@ -35,19 +35,19 @@ class WebsocketTest : WordSpec(), TestListener {
                 firstMessageString.shouldNotBeBlank()
             }
 
-            "be a WebsocketIdMessage" {
-                firstMessageString.shouldContain("WebsocketIdMessage")
+            "be a WebSocketIdMessage" {
+                firstMessageString.shouldContain("WebSocketIdMessage")
                 firstMessageString.shouldContain("id")
             }
 
             "have a correct id" {
-                val firstMessage = jsonTo<WebsocketIdMessage>(firstMessageString)
+                val firstMessage = jsonTo<WebSocketIdMessage>(firstMessageString)
                 firstMessage.id.length.shouldBe(36)
             }
 
             "have the correct type" {
-                val firstMessage = jsonTo<WebsocketIdMessage>(firstMessageString)
-                firstMessage.type.shouldBe("WebsocketIdMessage")
+                val firstMessage = jsonTo<WebSocketIdMessage>(firstMessageString)
+                firstMessage.type.shouldBe("WebSocketIdMessage")
             }
         }
     }
