@@ -11,7 +11,9 @@ import net.tomp2p.peers.PeerAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-
+/**
+ * Connection to the P2P network
+ */
 class ClientService constructor(peerPort: Int? = findFreePort()) {
     companion object : KLogging()
 
