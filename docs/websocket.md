@@ -1,3 +1,3 @@
 # Package ch.hsr.dsl.dwrtc.websocket
 
-Blabla about the websocket package
+UI layer. Handles sending and receiving messages from the WebSocket connections. 

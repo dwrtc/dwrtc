@@ -1,7 +1,7 @@
 # Package ch.hsr.dsl.dwrtc.signaling
 
-Blablabla about the signaling package
+P2P layer. Handles sending and receiving messages through TomP2P.
 
-## Level 2 heading
+## Design decisions
 
-This is still about signaling
+* [SignalingMessage]'s [recipient][SignalingMessage.recipientSessionId] and [sender][SignalingMessage.senderSessionId] IDs are overwritten before they go to the TomP2P layer, since they could be faked by WebSocket clients

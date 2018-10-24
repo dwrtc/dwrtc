@@ -82,6 +82,7 @@ task downloadDependencies(type: Exec) {
 
 dokka {
     reportUndocumented = true
+    includeNonPublic = true
     outputFormat = 'html'
     outputDirectory = "$buildDir/javadoc"
     includes = ['docs/main.md', 'docs/signaling.md', 'docs/signaling.exceptions.md', 'docs/websocket.md', 'docs/util.md']

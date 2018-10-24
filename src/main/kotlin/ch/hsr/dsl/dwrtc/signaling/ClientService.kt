@@ -12,13 +12,19 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Connection to the P2P network
+ * Connection to the P2P network.
+ *
+ * @constructor Creates a peer. Optionally, set the port this peer uses
+ * @param peerPort the port this peer uses
  */
 class ClientService constructor(peerPort: Int? = findFreePort()) {
     companion object : KLogging()
 
+    /** The peer's ID */
     private val peerId = UUID.randomUUID().toString()
+    /** The TomP2P peer */
     internal var peer: PeerDHT
+    /** Map of user's session ID to their message handlers. See [InternalClient.onReceiveMessage] */
     private val emitterMap = ConcurrentHashMap<String, (ExternalClient, SignalingMessage) -> Unit>()
 
     init {
@@ -32,12 +38,22 @@ class ClientService constructor(peerPort: Int? = findFreePort()) {
         setupDirectMessageListener()
     }
 
+    /** Creates a peer and bootstraps. Optionally, set the port this peer uses.
+     *
+     * @param bootstrapPeerAddress the peer address to bootstrap with
+     * @param peerPort the port this peer uses
+     */
     constructor(bootstrapPeerAddress: PeerAddress, peerPort: Int? = findFreePort()) : this(peerPort) {
         logger.info { "bootstrapping with address:$bootstrapPeerAddress" }
         bootstrapPeer(bootstrapPeerAddress).onSuccess { logger.info { "bootstrapping completed" } }
-
     }
 
+    /**
+     *
+     * @param bootstrapIp the peer's IP to bootstrap with
+     * @param bootstrapPort the peer's port to bootstrap with
+     * @param peerPort the port this peer uses
+     */
     constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this(peerPort) {
         if (bootstrapIp != null && bootstrapPort != null) {
             logger.info { "bootstrapping with $bootstrapIp:$bootstrapPort" }
@@ -77,15 +93,15 @@ class ClientService constructor(peerPort: Int? = findFreePort()) {
     }
 
     private fun bootstrapPeer(peerAddress: PeerAddress) = peer.peer()
-        .bootstrap()
-        .peerAddress(peerAddress)
-        .start().awaitListeners()
+            .bootstrap()
+            .peerAddress(peerAddress)
+            .start().awaitListeners()
 
     private fun bootstrapPeer(peerDetails: PeerConnectionDetails) = peer.peer()
-        .bootstrap()
-        .inetAddress(peerDetails.ipAddress)
-        .ports(peerDetails.port)
-        .start().awaitListeners()
+            .bootstrap()
+            .inetAddress(peerDetails.ipAddress)
+            .ports(peerDetails.port)
+            .start().awaitListeners()
 
     private fun setupDirectMessageListener() {
         fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {

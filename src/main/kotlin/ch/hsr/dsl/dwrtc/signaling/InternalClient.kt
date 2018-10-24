@@ -3,6 +3,13 @@ package ch.hsr.dsl.dwrtc.signaling
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 
+/**
+ * Represents the own user.
+ *
+ * @property peer the TomP2P peer object
+ * @property clientService the ClientService
+ * @property sessionId the user's session ID
+ */
 class InternalClient(private val peer: PeerDHT, private val clientService: ClientService, val sessionId: String) {
     companion object : KLogging()
 
@@ -17,6 +24,11 @@ class InternalClient(private val peer: PeerDHT, private val clientService: Clien
         if (result.isFailed) throw Exception(result.failedReason())
     }
 
+    /**
+     * Register a listener that handles messages for this user
+     *
+     * @property emitter a callable that receives the sender and the actual message
+     */
     fun onReceiveMessage(emitter: (ExternalClient, SignalingMessage) -> Unit) {
         logger.info { "register emitter for message receiving (own peer address ${peer.peerAddress()})" }
 
