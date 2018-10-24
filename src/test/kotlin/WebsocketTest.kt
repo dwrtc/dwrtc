@@ -1,9 +1,9 @@
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.WebSocketIdMessage
 import ch.hsr.dsl.dwrtc.util.findFreePort
 import ch.hsr.dsl.dwrtc.util.jsonTo
 import ch.hsr.dsl.dwrtc.websocket.WEBSOCKET_PATH
 import ch.hsr.dsl.dwrtc.websocket.WebSocketHandler
+import ch.hsr.dsl.dwrtc.websocket.WebSocketIdMessage
 import io.javalin.Javalin
 import io.kotlintest.TestCaseOrder
 import io.kotlintest.extensions.TestListener

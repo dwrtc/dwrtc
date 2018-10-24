@@ -12,5 +12,3 @@ data class SignalingMessage(var senderSessionId: String?, var recipientSessionId
         }
 }
 
-data class WebSocketErrorMessage(val error: String) : Message("WebSocketErrorMessage")
-data class WebSocketIdMessage(val id: String) : Message("WebSocketIdMessage")
