@@ -3,11 +3,11 @@ package ch.hsr.dsl.dwrtc.signaling
 import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
 import ch.hsr.dsl.dwrtc.util.findFreePort
-import ch.hsr.dsl.dwrtc.util.onSuccess
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
+import util.onSuccess
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
