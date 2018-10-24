@@ -3,9 +3,26 @@ package ch.hsr.dsl.dwrtc.signaling
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 
+/**
+ * Represents the own user.
+ */
 interface IInternalClient {
+    /**
+     * Send a message to an external user.
+     *
+     * @param messageBody the message body
+     * @param recipient the external user
+     */
     fun sendMessage(messageBody: String, recipient: IExternalClient)
+
+    /**
+     * Register a listener that handles messages for this user
+     *
+     * @param emitter a callable that receives the sender and the actual message
+     */
     fun onReceiveMessage(emitter: (IExternalClient, SignalingMessage) -> Unit)
+
+    /** the user's session ID */
     val sessionId: String
 }
 
@@ -33,11 +50,6 @@ class InternalClient(
         result.onSuccess { logger.info { "message sent successfully" } }
     }
 
-    /**
-     * Register a listener that handles messages for this user
-     *
-     * @property emitter a callable that receives the sender and the actual message
-     */
     override fun onReceiveMessage(emitter: (IExternalClient, SignalingMessage) -> Unit) {
         logger.info { "register emitter for message receiving (own peer address ${peer.peerAddress()})" }
 

@@ -7,5 +7,7 @@ package ch.hsr.dsl.dwrtc.signaling.exceptions
  */
 open class SignalingException(message: String) : Exception(message)
 
-/** The requested user was not found in the DHT. */
+/**
+ * The requested user was not found in the DHT.
+ */
 class ClientNotFoundException(message: String) : SignalingException(message)

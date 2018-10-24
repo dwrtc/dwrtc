@@ -11,10 +11,37 @@ import util.onSuccess
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+/** Connection to the P2P network
+ */
 interface IClientService {
+    /** Add a new user.
+     *
+     * @param sessionId the user's session ID
+     * @returns the built InternalClient
+     */
     fun addClient(sessionId: String): IInternalClient
+
+    /**
+     * Remove a user.
+     *
+     * @param client the client to remove
+     */
     fun removeClient(client: IInternalClient)
+
+    /**
+     * Find another user
+     *
+     * @param sessionId the user to find
+     * @throws ClientNotFoundException when a user is not found
+     */
     fun findClient(sessionId: String): IExternalClient
+
+    /**
+     * Add a direct message listener. See [InternalClient.onReceiveMessage]
+     *
+     * @param sessionId the session ID this listener is added for
+     * @param emitter the callable to be called when a message is received
+     */
     fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit)
 }
 
@@ -99,18 +126,34 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         emitterMap[sessionId] = emitter
     }
 
+    /**
+     * Bootstrap our peer to another peer
+     *
+     * @param peerAddress the peer to bootstrap to
+     */
     private fun bootstrapPeer(peerAddress: PeerAddress) = peer.peer()
             .bootstrap()
             .peerAddress(peerAddress)
             .start().awaitListeners()
 
+    /**
+     * Bootstrap our peer to another peer
+     *
+     * @param peerDetails the peer to bootstrap to
+     */
     private fun bootstrapPeer(peerDetails: PeerConnectionDetails) = peer.peer()
             .bootstrap()
             .inetAddress(peerDetails.ipAddress)
             .ports(peerDetails.port)
             .start().awaitListeners()
 
+    /**
+     * Setup the dispatcher to send the incoming messages to the correct user
+     */
     private fun setupDirectMessageListener() {
+        /**
+         * Dispatch the actual message
+         */
         fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {
             val recipientSessionId = signalingMessage.recipientSessionId!!
             val senderSessionId = signalingMessage.senderSessionId!!
@@ -122,6 +165,9 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
             }
         }
 
+        /**
+         * Only dispatch a message if it's actually one of our own messages
+         */
         fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
             logger.info { "got message $messageDto" }
             return if (messageDto is SignalingMessage) {
