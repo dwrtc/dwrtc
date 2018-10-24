@@ -117,8 +117,8 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
 
         val dhtFuture = peer.get(Number160.createHash(sessionId)).start()
         val future = GetCustomFuture<IExternalClient, PeerAddress>(
-            dhtFuture
-        ) { peerAddress ->ExternalClient(sessionId, peerAddress, peer) }
+                dhtFuture
+        ) { peerAddress -> ExternalClient(sessionId, peerAddress, peer) }
 
         future.onFailure { "find client with $sessionId failed" }
         future.onSuccess { "find client with $sessionId successful" }
