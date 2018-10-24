@@ -1,4 +1,4 @@
-package util
+package ch.hsr.dsl.dwrtc.util
 
 import ch.hsr.dsl.dwrtc.signaling.Future
 import net.tomp2p.dht.FutureGet

@@ -2,10 +2,10 @@ package ch.hsr.dsl.dwrtc.signaling
 
 import net.tomp2p.dht.FutureGet
 import net.tomp2p.futures.BaseFuture
-import util.onFailure
-import util.onGet
-import util.onGetAllCustom
-import util.onSuccess
+import ch.hsr.dsl.dwrtc.util.onFailure
+import ch.hsr.dsl.dwrtc.util.onGet
+import ch.hsr.dsl.dwrtc.util.onGetAllCustom
+import ch.hsr.dsl.dwrtc.util.onSuccess
 
 open class Future(private val baseFuture: BaseFuture) {
 	fun await() = Future(baseFuture.awaitListeners())
