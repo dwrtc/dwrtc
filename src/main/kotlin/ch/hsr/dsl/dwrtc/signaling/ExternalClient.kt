@@ -4,17 +4,17 @@ import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.PeerAddress
 
 /** Represents another user */
-interface IExternalClient {
+abstract class IExternalClient {
     /**
      * Send a message to this user
      *
      * @param messageBody the message body
      * @return a future. See [Future]
      */
-    fun sendMessage(messageBody: String): Future
+    internal abstract fun sendMessage(messageBody: String): Future
 
     /** the user's session ID */
-    val sessionId: String
+    abstract val sessionId: String
 }
 
 /** Represents another user.
@@ -23,7 +23,7 @@ interface IExternalClient {
  * @property peer the peer to use for all operations
  */
 class ExternalClient(override val sessionId: String, val peerAddress: PeerAddress, val peer: PeerDHT) :
-        IExternalClient {
+        IExternalClient() {
     override fun sendMessage(messageBody: String) = Future(
             peer.peer()
                     .sendDirect(peerAddress)

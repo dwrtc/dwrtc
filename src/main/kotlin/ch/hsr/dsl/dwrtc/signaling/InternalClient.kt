@@ -11,7 +11,7 @@ interface IInternalClient {
      * @param messageBody the message body
      * @param recipient the external user
      */
-    fun sendMessage(messageBody: String, recipient: IExternalClient)
+    fun sendMessage(messageBody: String, recipient: IExternalClient): Future
 
     /**
      * Register a listener that handles messages for this user
@@ -40,13 +40,14 @@ class InternalClient(
     /** Logging companion */
     companion object : KLogging()
 
-    override fun sendMessage(messageBody: String, recipient: IExternalClient) {
+    override fun sendMessage(messageBody: String, recipient: IExternalClient): Future {
         logger.info { "send message $messageBody from ${peer.peerAddress()} to $recipient" }
 
         val result = recipient.sendMessage(messageBody)
         logger.info { "sent message $messageBody from ${peer.peerAddress()} to $recipient" }
         result.onFailure { logger.info { "send message failed: $it" } }
         result.onSuccess { logger.info { "message sent successfully" } }
+        return result
     }
 
     override fun onReceiveMessage(emitter: (IExternalClient, SignalingMessage) -> Unit) {
