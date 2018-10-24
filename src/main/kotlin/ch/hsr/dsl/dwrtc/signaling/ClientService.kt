@@ -11,15 +11,13 @@ import util.onSuccess
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-
-class ClientService constructor(peerPort: Int? = findFreePort()) {
-
 interface IClientService {
     fun addClient(sessionId: String): IInternalClient
     fun removeClient(client: IInternalClient)
     fun findClient(sessionId: String): IExternalClient
     fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit)
 }
+
 /**
  * Connection to the P2P network.
  *
@@ -139,3 +137,4 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         }
     }
 }
+

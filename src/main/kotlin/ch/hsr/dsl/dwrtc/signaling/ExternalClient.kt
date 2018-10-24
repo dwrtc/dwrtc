@@ -3,7 +3,6 @@ package ch.hsr.dsl.dwrtc.signaling
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.PeerAddress
 
-
 interface IExternalClient {
     fun sendMessage(messageBody: String): Future
     val sessionId: String
@@ -11,12 +10,12 @@ interface IExternalClient {
 
 /** Represents another user. */
 class ExternalClient(override val sessionId: String, val peerAddress: PeerAddress, val peer: PeerDHT) :
-    IExternalClient {
+        IExternalClient {
     override fun sendMessage(messageBody: String) = Future(
-        peer.peer()
-            .sendDirect(peerAddress)
-            .`object`(SignalingMessage(sessionId, sessionId, messageBody))
-            .start()
+            peer.peer()
+                    .sendDirect(peerAddress)
+                    .`object`(SignalingMessage(sessionId, sessionId, messageBody))
+                    .start()
     )
 
     override fun equals(other: Any?): Boolean {
