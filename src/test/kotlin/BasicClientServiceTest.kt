@@ -42,9 +42,6 @@ class BasicClientServiceTest : WordSpec(), TestListener {
                     clientServiceSecond.findClient(THIRD_CLIENT_ID)
                 }
             }
-            "find the correct peer address" {
-                clientServiceFirst.findClient(SECOND_CLIENT_ID).peerAddress.shouldBe(clientServiceSecond.peer.peerAddress())
-            }
         }
     }
 }
