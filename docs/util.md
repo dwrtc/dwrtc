@@ -1,3 +1,3 @@
 # Package ch.hsr.dsl.dwrtc.util
 
-Util
+Various bits and pieces

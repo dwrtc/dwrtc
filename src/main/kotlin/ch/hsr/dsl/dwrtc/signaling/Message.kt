@@ -3,7 +3,7 @@ package ch.hsr.dsl.dwrtc.signaling
 import java.io.Serializable
 
 /**
- * Generic Message class.
+ * Generic Message class
  *
  * @property type the type of the message. Enables casting to a specific subclass.
  */
