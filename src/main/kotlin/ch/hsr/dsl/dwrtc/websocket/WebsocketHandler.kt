@@ -15,7 +15,7 @@ const val WEBSOCKET_PATH = "/ws"
 class WebSocketHandler(app: Javalin, private val signallingService: ClientService) {
     companion object : KLogging()
 
-    private val clients = ConcurrentHashMap<String, InternalClient>()
+    private val clients = ConcurrentHashMap<String, IInternalClient>()
     private val sessions = ConcurrentHashMap<String, WsSession>()
 
     init {
@@ -67,7 +67,7 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         }
     }
 
-    private fun onReceiveMessageFromSignaling(sender: ExternalClient, message: SignalingMessage) {
+    private fun onReceiveMessageFromSignaling(sender: IExternalClient, message: SignalingMessage) {
         logger.info { "sending message ${message}" }
         sessions[message.recipientSessionId]?.let { it.send(toJson(message)) }
     }

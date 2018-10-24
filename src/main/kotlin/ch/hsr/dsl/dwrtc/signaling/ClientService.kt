@@ -3,21 +3,30 @@ package ch.hsr.dsl.dwrtc.signaling
 import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
 import ch.hsr.dsl.dwrtc.util.findFreePort
-import ch.hsr.dsl.dwrtc.util.onSuccess
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
+import util.onSuccess
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+
+class ClientService constructor(peerPort: Int? = findFreePort()) {
+
+interface IClientService {
+    fun addClient(sessionId: String): IInternalClient
+    fun removeClient(client: IInternalClient)
+    fun findClient(sessionId: String): IExternalClient
+    fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit)
+}
 /**
  * Connection to the P2P network.
  *
  * @constructor Creates a peer. Optionally, set the port this peer uses
  * @param peerPort the port this peer uses
  */
-class ClientService constructor(peerPort: Int? = findFreePort()) {
+class ClientService constructor(peerPort: Int? = findFreePort()) : IClientService {
     companion object : KLogging()
 
     /** The peer's ID */
@@ -61,7 +70,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) {
         }
     }
 
-    fun addClient(sessionId: String): InternalClient {
+    override fun addClient(sessionId: String): IInternalClient {
         logger.info { "add client $sessionId" }
         logger.info { "own peer: ${peer.peerAddress()} " }
 
@@ -69,14 +78,14 @@ class ClientService constructor(peerPort: Int? = findFreePort()) {
         return InternalClient(peer, this, sessionId)
     }
 
-    fun removeClient(internalClient: InternalClient) {
-        logger.info { "remove client ${internalClient.sessionId}" }
+    override fun removeClient(client: IInternalClient) {
+        logger.info { "remove client ${client.sessionId}" }
 
-        peer.remove(Number160.createHash(internalClient.sessionId)).all().start().awaitUninterruptibly()
-        emitterMap.remove(internalClient.sessionId)
+        peer.remove(Number160.createHash(client.sessionId)).all().start().awaitUninterruptibly()
+        emitterMap.remove(client.sessionId)
     }
 
-    fun findClient(sessionId: String): ExternalClient {
+    override fun findClient(sessionId: String): IExternalClient {
         logger.info { "try to find client $sessionId" }
 
         val peerIdGet = peer.get(Number160.createHash(sessionId)).start().awaitUninterruptibly()
@@ -84,11 +93,11 @@ class ClientService constructor(peerPort: Int? = findFreePort()) {
             logger.info { "found client" }
 
             val peerAddress = peerIdGet.data().`object`() as PeerAddress
-            ExternalClient(sessionId, peerAddress)
+            ExternalClient(sessionId, peerAddress, peer)
         } else throw ClientNotFoundException("No peer found under session ID $sessionId")
     }
 
-    internal fun addDirectMessageListener(sessionId: String, emitter: (ExternalClient, SignalingMessage) -> Unit) {
+    override fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit) {
         emitterMap[sessionId] = emitter
     }
 
@@ -109,7 +118,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) {
             val senderSessionId = signalingMessage.senderSessionId!!
             emitterMap[recipientSessionId]?.let {
                 logger.info { "message accepted, found emitter for $recipientSessionId" }
-                it(ExternalClient(senderSessionId, senderPeerAddress), signalingMessage)
+                it(ExternalClient(senderSessionId, senderPeerAddress, peer), signalingMessage)
             } ?: run {
                 logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
             }
