@@ -1,6 +1,5 @@
 package ch.hsr.dsl.dwrtc.signaling
 
-import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
 import ch.hsr.dsl.dwrtc.util.findFreePort
 import mu.KLogging
@@ -13,9 +12,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 
 interface IClientService {
-    fun addClient(sessionId: String): IInternalClient
-    fun removeClient(client: IInternalClient)
-    fun findClient(sessionId: String): IExternalClient
+    fun addClient(sessionId: String): Pair<IInternalClient, Future>
+    fun removeClient(client: IInternalClient): Future
+    fun findClient(sessionId: String): GetFuture<IExternalClient>
     fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit)
 }
 
@@ -50,31 +49,36 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         }
     }
 
-    override fun addClient(sessionId: String): IInternalClient {
+    override fun addClient(sessionId: String): Pair<IInternalClient, Future> {
         logger.info { "add client $sessionId" }
         logger.info { "own peer: ${peer.peerAddress()} " }
 
-        peer.put(Number160.createHash(sessionId)).`object`(peer.peerAddress()).start().awaitUninterruptibly()
-        return InternalClient(peer, this, sessionId)
+        val future = Future(peer.put(Number160.createHash(sessionId)).`object`(peer.peerAddress()).start())
+        return Pair(InternalClient(peer, this, sessionId), future)
     }
 
-    override fun removeClient(client: IInternalClient) {
+    override fun removeClient(client: IInternalClient): Future {
         logger.info { "remove client ${client.sessionId}" }
 
-        peer.remove(Number160.createHash(client.sessionId)).all().start().awaitUninterruptibly()
-        emitterMap.remove(client.sessionId)
+        val future = Future(peer.remove(Number160.createHash(client.sessionId)).all().start())
+        future.onComplete { emitterMap.remove(client.sessionId) }
+        future.onFailure { reason -> logger.info { "client remove failed $reason" } }
+
+        return future
     }
 
-    override fun findClient(sessionId: String): IExternalClient {
+    override fun findClient(sessionId: String): GetFuture<IExternalClient> {
         logger.info { "try to find client $sessionId" }
 
-        val peerIdGet = peer.get(Number160.createHash(sessionId)).start().awaitUninterruptibly()
-        return if (peerIdGet.isSuccess && peerIdGet.data() != null) {
-            logger.info { "found client" }
+        val dhtFuture = peer.get(Number160.createHash(sessionId)).start()
+        val future = GetCustomFuture<IExternalClient, PeerAddress>(
+            dhtFuture
+        ) { peerAddress -> ExternalClient(sessionId, peerAddress, peer) }
 
-            val peerAddress = peerIdGet.data().`object`() as PeerAddress
-            ExternalClient(sessionId, peerAddress, peer)
-        } else throw ClientNotFoundException("No peer found under session ID $sessionId")
+        future.onFailure { "find client with $sessionId failed" }
+        future.onSuccess { "find client with $sessionId successful" }
+
+        return future
     }
 
     override fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit) {

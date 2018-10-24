@@ -21,18 +21,18 @@ fun BaseFuture.onFailure(emitter: (failedReason: String) -> Unit) {
     this.onComplete { result -> if (result.isFailed) emitter(result.failedReason()) }
 }
 
-fun <T, U> FutureGet.onGetCustom(emitter: (data: U, future: Future) -> Unit, transformer: (T) -> U) {
+fun <T, U> FutureGet.onGetCustom(emitter: (data: U?, future: Future) -> Unit, transformer: (T) -> U) {
     this.addListener(object : BaseFutureAdapter<FutureGet>() {
         override fun operationComplete(future: FutureGet) {
-            val data = future.data().`object`() as T
-            emitter(transformer(data), Future(future))
+            val data = transformer(future.data()?.`object`() as T) ?: null
+            emitter(data, Future(future))
         }
     })
 }
 
-fun <T> FutureGet.onGet(emitter: (data: T, future: Future) -> Unit) = this.onGetCustom<T, T>(emitter, { it })
+fun <T> FutureGet.onGet(emitter: (data: T?, future: Future) -> Unit) = this.onGetCustom<T, T>(emitter, { it })
 
-fun <T, U> FutureGet.onGetAllCustom(emitter: (data: U, future: Future) -> Unit, transformer: (List<T>) -> U) {
+fun <T, U> FutureGet.onGetAllCustom(emitter: (data: U?, future: Future) -> Unit, transformer: (List<T>) -> U) {
     this.addListener(object : BaseFutureAdapter<FutureGet>() {
         override fun operationComplete(future: FutureGet) {
             val list = future.dataMap().values.map { it.`object`() as T }
@@ -41,6 +41,6 @@ fun <T, U> FutureGet.onGetAllCustom(emitter: (data: U, future: Future) -> Unit, 
     })
 }
 
-fun <T> FutureGet.onGetAll(emitter: (data: List<T>, future: Future) -> Unit) {
+fun <T> FutureGet.onGetAll(emitter: (data: List<T>?, future: Future) -> Unit) {
     this.onGetAllCustom<T, List<T>>(emitter, { it })
 }

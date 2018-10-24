@@ -1,7 +1,6 @@
 package ch.hsr.dsl.dwrtc.websocket
 
 import ch.hsr.dsl.dwrtc.signaling.*
-import ch.hsr.dsl.dwrtc.signaling.exceptions.SignalingException
 import ch.hsr.dsl.dwrtc.util.jsonTo
 import ch.hsr.dsl.dwrtc.util.toJson
 import io.javalin.Javalin
@@ -32,26 +31,32 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
 
         session.idleTimeout = IDLE_TIMEOUT_MS
 
-        sessions[session.id] = session
+        val (client, clientFuture) = signallingService.addClient(session.id)
+        clientFuture.onSuccess {
+            sessions[session.id] = session
 
-        val client = signallingService.addClient(session.id)
-        client.onReceiveMessage { sender, messageDto -> onReceiveMessageFromSignaling(sender, messageDto) }
-        clients[session.id] = client
+            client.onReceiveMessage { sender, messageDto -> onReceiveMessageFromSignaling(sender, messageDto) }
+            clients[session.id] = client
 
-        val message = WebSocketIdMessage(session.id)
-        session.send(toJson(message))
+            val message = WebSocketIdMessage(session.id)
+            session.send(toJson(message))
+        }
     }
 
     private fun onReceiveMessageFromWebSocket(session: WsSession, message: String) {
         val messageDto = jsonTo<SignalingMessage>(message)
         messageDto.senderSessionId = session.id
 
-        try {
-            val recipient = signallingService.findClient(messageDto.recipientSessionId!!)
-            clients[session.id]?.let { it.sendMessage(messageDto.messageBody, recipient) }
-        } catch (e: SignalingException) {
-            session.send(toJson(WebSocketErrorMessage(e.message!!)))
+        val future = signallingService.findClient(messageDto.recipientSessionId!!)
+        future.onGet { recipient, _ ->
+            clients[session.id]?.let {
+                it.sendMessage(
+                    messageDto.messageBody,
+                    recipient
+                )
+            }
         }
+        future.onNotFound { session.send(toJson(WebSocketErrorMessage("not found"))) }
     }
 
     private fun close(session: WsSession, reason: String) {

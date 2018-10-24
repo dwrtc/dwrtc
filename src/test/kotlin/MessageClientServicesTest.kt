@@ -1,9 +1,7 @@
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import io.kotlintest.Description
-import io.kotlintest.TestCaseOrder
-import io.kotlintest.TestResult
+import ch.hsr.dsl.dwrtc.signaling.Future
+import io.kotlintest.*
 import io.kotlintest.extensions.TestListener
-import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 
 class MessageClientServicesTest : WordSpec(), TestListener {
@@ -25,21 +23,33 @@ class MessageClientServicesTest : WordSpec(), TestListener {
         val clientServiceFirst = ClientService(peers.first().peerAddress())
         val clientServiceSecond = ClientService(peers.last().peerAddress())
 
-        val clientFirst = clientServiceFirst.addClient(FIRST_CLIENT_ID)
-        val clientSecond = clientServiceSecond.addClient(SECOND_CLIENT_ID)
+        val (clientFirst, firstFuture) = clientServiceFirst.addClient(FIRST_CLIENT_ID)
+        val (clientSecond, secondFuture) = clientServiceSecond.addClient(SECOND_CLIENT_ID)
 
-        val externalClientSecond = clientServiceFirst.findClient(SECOND_CLIENT_ID) // TODO inconsistent
+        val externalClientSecondFuture = clientServiceFirst.findClient(SECOND_CLIENT_ID)
 
         var message = ""
 
         "a client" should {
             "be able to send a message" {
-                clientFirst.sendMessage(MESSAGE_BODY, externalClientSecond)
+                var messageFuture: Future? = null
+                externalClientSecondFuture.onGet { externalClient, _ ->
+                    messageFuture = clientFirst.sendMessage(
+                        MESSAGE_BODY,
+                        externalClient
+                    )
+                }
+                externalClientSecondFuture.await()
+                messageFuture?.onFailure { fail("message failed") } ?: fail("messageFuture not set")
+                messageFuture?.await()
             }
 
             "be able to receive a message" {
                 clientSecond.onReceiveMessage { _, messageDto -> message = messageDto.messageBody }
-                clientFirst.sendMessage(MESSAGE_BODY, externalClientSecond)
+                externalClientSecondFuture.onGet { externalClient, _ ->
+                    clientFirst.sendMessage(MESSAGE_BODY, externalClient).await()
+                }
+                externalClientSecondFuture.await()
                 message.shouldBe(MESSAGE_BODY)
             }
         }

@@ -4,7 +4,7 @@ import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 
 interface IInternalClient {
-    fun sendMessage(messageBody: String, recipient: IExternalClient)
+    fun sendMessage(messageBody: String, recipient: IExternalClient): Future
     fun onReceiveMessage(emitter: (IExternalClient, SignalingMessage) -> Unit)
     val sessionId: String
 }
@@ -17,13 +17,14 @@ class InternalClient(
     IInternalClient {
     companion object : KLogging()
 
-    override fun sendMessage(messageBody: String, recipient: IExternalClient) {
+    override fun sendMessage(messageBody: String, recipient: IExternalClient): Future {
         logger.info { "send message $messageBody from ${peer.peerAddress()} to $recipient" }
 
         val result = recipient.sendMessage(messageBody)
         logger.info { "sent message $messageBody from ${peer.peerAddress()} to $recipient" }
         result.onFailure { logger.info { "send message failed: $it" } }
         result.onSuccess { logger.info { "message sent successfully" } }
+        return result
     }
 
     override fun onReceiveMessage(emitter: (IExternalClient, SignalingMessage) -> Unit) {

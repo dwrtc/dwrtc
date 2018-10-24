@@ -3,13 +3,13 @@ package ch.hsr.dsl.dwrtc.signaling
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.PeerAddress
 
-interface IExternalClient {
-    fun sendMessage(messageBody: String): Future
-    val sessionId: String
+abstract class IExternalClient {
+    internal abstract fun sendMessage(messageBody: String): Future
+    abstract val sessionId: String
 }
 
 class ExternalClient(override val sessionId: String, val peerAddress: PeerAddress, val peer: PeerDHT) :
-    IExternalClient {
+    IExternalClient() {
     override fun sendMessage(messageBody: String) = Future(
         peer.peer()
             .sendDirect(peerAddress)
