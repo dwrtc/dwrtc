@@ -3,9 +3,7 @@ package ch.hsr.dsl.dwrtc.signaling
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.PeerAddress
 
-/**
- * Represents another user
- */
+/** Represents another user */
 interface IExternalClient {
     /**
      * Send a message to this user
@@ -33,6 +31,7 @@ class ExternalClient(override val sessionId: String, val peerAddress: PeerAddres
                     .start()
     )
 
+    /** equals */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ExternalClient) return false
@@ -43,6 +42,7 @@ class ExternalClient(override val sessionId: String, val peerAddress: PeerAddres
         return true
     }
 
+    /** hashcode */
     override fun hashCode(): Int {
         var result = sessionId.hashCode()
         result = 31 * result + peerAddress.peerId().hashCode()

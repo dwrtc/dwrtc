@@ -1,6 +1,9 @@
 package ch.hsr.dsl.dwrtc.websocket
 
-import ch.hsr.dsl.dwrtc.signaling.*
+import ch.hsr.dsl.dwrtc.signaling.ClientService
+import ch.hsr.dsl.dwrtc.signaling.IExternalClient
+import ch.hsr.dsl.dwrtc.signaling.IInternalClient
+import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.signaling.exceptions.SignalingException
 import ch.hsr.dsl.dwrtc.util.jsonTo
 import ch.hsr.dsl.dwrtc.util.toJson
@@ -9,13 +12,25 @@ import io.javalin.websocket.WsSession
 import mu.KLogging
 import java.util.concurrent.ConcurrentHashMap
 
+/** WebSocket session idle timeout in milliseconds. */
 const val IDLE_TIMEOUT_MS: Long = 15 * 60 * 1000
+/** Path that the WebSocket handler is available on */
 const val WEBSOCKET_PATH = "/ws"
 
+/**
+ * Main handler class
+ *
+ * @param app the Javalin app
+ * @property signallingService the underlying ClientService
+ * @constructor sets up the WebSocket path and various handlers
+ */
 class WebSocketHandler(app: Javalin, private val signallingService: ClientService) {
+    /** Logging companion */
     companion object : KLogging()
 
+    /** Map of session ID to InternalClient */
     private val clients = ConcurrentHashMap<String, IInternalClient>()
+    /** Map of session ID to WebSocket session */
     private val sessions = ConcurrentHashMap<String, WsSession>()
 
     init {
@@ -27,6 +42,11 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         }
     }
 
+    /**
+     * Handler for new WebSocket connections
+     *
+     * @param session the new WebSocket session
+     */
     private fun connect(session: WsSession) {
         logger.info { "create client for session ${session.id}" }
 
@@ -42,6 +62,14 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         session.send(toJson(message))
     }
 
+    /**
+     * Handler for a new message from the WebSocket
+     *
+     * Sends the message to the recipient via P2P
+     *
+     * @param session the WebSocket session this message is from
+     * @param message the message content
+     */
     private fun onReceiveMessageFromWebSocket(session: WsSession, message: String) {
         val messageDto = jsonTo<SignalingMessage>(message)
         messageDto.senderSessionId = session.id
@@ -54,6 +82,12 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         }
     }
 
+    /**
+     * Handler for when a WebSocket session closes
+     *
+     * @param session the closing WebSocket session
+     * @param reason the reason why this session closed
+     */
     private fun close(session: WsSession, reason: String) {
         logger.info { "close session ${session.id} because of $reason" }
 
@@ -67,6 +101,11 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         }
     }
 
+    /**
+     * Handler for a new message from the P2P layer
+     *
+     * Sends the message to the recipient via WebSocket
+     */
     private fun onReceiveMessageFromSignaling(sender: IExternalClient, message: SignalingMessage) {
         logger.info { "sending message ${message}" }
         sessions[message.recipientSessionId]?.let { it.send(toJson(message)) }

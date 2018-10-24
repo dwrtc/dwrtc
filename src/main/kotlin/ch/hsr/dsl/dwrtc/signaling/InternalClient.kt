@@ -3,9 +3,7 @@ package ch.hsr.dsl.dwrtc.signaling
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 
-/**
- * Represents the own user.
- */
+/** Represents the own user */
 interface IInternalClient {
     /**
      * Send a message to an external user.
@@ -39,6 +37,7 @@ class InternalClient(
         override val sessionId: String
 ) :
         IInternalClient {
+    /** Logging companion */
     companion object : KLogging()
 
     override fun sendMessage(messageBody: String, recipient: IExternalClient) {
@@ -56,6 +55,7 @@ class InternalClient(
         clientService.addDirectMessageListener(sessionId, emitter)
     }
 
+    /** equals */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is InternalClient) return false
@@ -66,6 +66,7 @@ class InternalClient(
         return true
     }
 
+    /** hashcode */
     override fun hashCode(): Int {
         var result = peer.peerID().hashCode()
         result = 31 * result + sessionId.hashCode()

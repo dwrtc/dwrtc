@@ -11,8 +11,6 @@ import java.net.InetAddress
  * @property port the port
  */
 data class PeerConnectionDetails(val ipAddressString: String, val port: Int) {
-    /**
-     * Technical IP address. Converted from [ipAddressString].
-     */
+    /** Technical IP address. Converted from [ipAddressString]. */
     val ipAddress: InetAddress = InetAddress.getByName(ipAddressString)
 }

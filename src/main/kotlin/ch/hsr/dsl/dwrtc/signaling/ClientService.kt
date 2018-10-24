@@ -3,16 +3,15 @@ package ch.hsr.dsl.dwrtc.signaling
 import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
 import ch.hsr.dsl.dwrtc.util.findFreePort
+import ch.hsr.dsl.dwrtc.util.onSuccess
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
-import ch.hsr.dsl.dwrtc.util.onSuccess
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-/** Connection to the P2P network
- */
+/** Connection to the P2P network */
 interface IClientService {
     /** Add a new user.
      *
@@ -52,6 +51,7 @@ interface IClientService {
  * @param peerPort the port this peer uses
  */
 class ClientService constructor(peerPort: Int? = findFreePort()) : IClientService {
+    /** Logging companion */
     companion object : KLogging()
 
     /** The peer's ID */
@@ -147,13 +147,9 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
             .ports(peerDetails.port)
             .start().awaitListeners()
 
-    /**
-     * Setup the dispatcher to send the incoming messages to the correct user
-     */
+    /** Setup the dispatcher to send the incoming messages to the correct user */
     private fun setupDirectMessageListener() {
-        /**
-         * Dispatch the actual message
-         */
+        /** Dispatch the actual message */
         fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {
             val recipientSessionId = signalingMessage.recipientSessionId!!
             val senderSessionId = signalingMessage.senderSessionId!!
@@ -165,9 +161,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
             }
         }
 
-        /**
-         * Only dispatch a message if it's actually one of our own messages
-         */
+        /** Only dispatch a message if it's actually one of our own messages */
         fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
             logger.info { "got message $messageDto" }
             return if (messageDto is SignalingMessage) {
