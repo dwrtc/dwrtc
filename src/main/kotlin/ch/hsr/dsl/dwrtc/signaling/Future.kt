@@ -7,7 +7,7 @@ import util.*
 open class Future(private val baseFuture: BaseFuture) {
 	fun await() {
 		baseFuture.await()
-		Future(baseFuture.awaitListeners())
+		baseFuture.awaitListeners()
 	}
 	fun onComplete(emitter: () -> Unit) = baseFuture.onComplete { emitter() }
 	fun onSuccess(emitter: () -> Unit) = baseFuture.onSuccess(emitter)
