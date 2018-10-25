@@ -3,8 +3,6 @@ plugins {
     id "org.sonarqube" version "2.6"
 }
 
-apply plugin: "jacoco"
-
 group = "ch.hsr.dsl.dwrtc"
 version = "1.0-SNAPSHOT"
 
