@@ -10,6 +10,8 @@ import net.tomp2p.futures.BaseFuture
  * This mainly decouples our Futures from the TomP2P Futures. This means, users of this class need not import TomP2P.
  *
  * Note: DO have a look at how TomP2P defines [completion][net.tomp2p.futures.BaseFuture.onComplete], [success][net.tomp2p.futures.BaseFuture.onSuccess] and [failure][net.tomp2p.futures.BaseFuture.onFailure] before using this!
+ *
+ * @property baseFuture base TomP2P BaseFuture
  */
 open class Future(private val baseFuture: BaseFuture) {
     /** Await all registered listeners */
