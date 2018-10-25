@@ -18,10 +18,13 @@ Note, that all these classes employ TomP2P semantics. Think of these as a very t
 
 `FutureGet` extension classes: these work on all Get operations that TomP2P returns. Also includes all `BaseFuture` extensions.
 
+These fire on `BaseFuture`'s `onComplete`! Therefore, you have to check for success or failure yourself
+
 These methods differ by these orthogonal concepts:
 
 * Do you get one or multiple things? Multiple things have the suffix `All`
-* In your method, do you transform the response from the DHT? Transformed responses have the suffix `Custom`
+* In your method, do you transform the response from the DHT before you return it? Transformed responses have the suffix `Custom`
+  * E.g., you get a `UserId` from the DHT, but you want to return a `User` 
   
 
 * [net.tomp2p.dht.FutureGet.onGet]
