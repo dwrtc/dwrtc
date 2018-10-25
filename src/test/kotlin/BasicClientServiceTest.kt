@@ -8,6 +8,7 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 
 class BasicClientServiceTest : WordSpec(), TestListener {
+    override fun isInstancePerTest(): Boolean = true
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
 
     companion object {

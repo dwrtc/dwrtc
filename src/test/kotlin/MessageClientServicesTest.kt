@@ -5,6 +5,7 @@ import io.kotlintest.extensions.TestListener
 import io.kotlintest.specs.WordSpec
 
 class MessageClientServicesTest : WordSpec(), TestListener {
+    override fun isInstancePerTest(): Boolean = true
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
 
     companion object {
