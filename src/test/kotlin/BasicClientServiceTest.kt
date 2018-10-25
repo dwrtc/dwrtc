@@ -26,10 +26,11 @@ class BasicClientServiceTest : WordSpec(), TestListener {
     init {
         val clientServiceFirst = ClientService(peers.first().peerAddress())
         val clientServiceSecond = ClientService(peers.last().peerAddress())
-        clientServiceFirst.addClient(FIRST_CLIENT_ID)
-        clientServiceSecond.addClient(SECOND_CLIENT_ID)
-        val (client, _) = clientServiceFirst.addClient(THIRD_CLIENT_ID)
-        clientServiceFirst.removeClient(client).await()
+        clientServiceFirst.addClient(FIRST_CLIENT_ID).second.await()
+        clientServiceSecond.addClient(SECOND_CLIENT_ID).second.await()
+        val (thirdClient, clientFuture) = clientServiceFirst.addClient(THIRD_CLIENT_ID)
+        clientFuture.await()
+        clientServiceFirst.removeClient(thirdClient).await()
 
         "Two Client Services" should {
             "find clients on the same one" {

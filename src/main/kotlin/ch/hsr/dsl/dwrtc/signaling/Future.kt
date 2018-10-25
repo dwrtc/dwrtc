@@ -5,7 +5,10 @@ import net.tomp2p.futures.BaseFuture
 import util.*
 
 open class Future(private val baseFuture: BaseFuture) {
-	fun await() = Future(baseFuture.awaitListeners())
+	fun await() {
+		baseFuture.await()
+		Future(baseFuture.awaitListeners())
+	}
 	fun onComplete(emitter: () -> Unit) = baseFuture.onComplete { emitter() }
 	fun onSuccess(emitter: () -> Unit) = baseFuture.onSuccess(emitter)
 	fun onFailure(emitter: (failedReason: String) -> Unit) = baseFuture.onFailure(emitter)
