@@ -1,10 +1,14 @@
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.exceptions.ClientNotFoundException
-import io.kotlintest.*
+import io.kotlintest.Description
+import io.kotlintest.TestCaseOrder
+import io.kotlintest.TestResult
 import io.kotlintest.extensions.TestListener
+import io.kotlintest.matchers.boolean.shouldBeTrue
+import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 
 class BasicClientServiceTest : WordSpec(), TestListener {
+    override fun isInstancePerTest(): Boolean = true
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
 
     companion object {
@@ -22,28 +26,45 @@ class BasicClientServiceTest : WordSpec(), TestListener {
     init {
         val clientServiceFirst = ClientService(peers.first().peerAddress())
         val clientServiceSecond = ClientService(peers.last().peerAddress())
-        clientServiceFirst.addClient(FIRST_CLIENT_ID)
-        clientServiceSecond.addClient(SECOND_CLIENT_ID)
-        clientServiceFirst.removeClient(clientServiceFirst.addClient(THIRD_CLIENT_ID))
+        clientServiceFirst.addClient(FIRST_CLIENT_ID).second.await()
+        clientServiceSecond.addClient(SECOND_CLIENT_ID).second.await()
+        val (thirdClient, clientFuture) = clientServiceFirst.addClient(THIRD_CLIENT_ID)
+        clientFuture.await()
+        clientServiceFirst.removeClient(thirdClient).await()
 
         "Two Client Services" should {
             "find clients on the same one" {
-                clientServiceFirst.findClient(FIRST_CLIENT_ID).sessionId.shouldBe(FIRST_CLIENT_ID)
+                var sessionId = ""
+                val future = clientServiceFirst.findClient(FIRST_CLIENT_ID)
+                future.onGet { externalClient, _ -> sessionId = externalClient.sessionId }
+                future.await()
+                sessionId.shouldBe(FIRST_CLIENT_ID)
             }
             "find clients of another one" {
-                clientServiceFirst.findClient(SECOND_CLIENT_ID).sessionId.shouldBe(SECOND_CLIENT_ID)
-                clientServiceSecond.findClient(FIRST_CLIENT_ID).sessionId.shouldBe(FIRST_CLIENT_ID)
+                var firstSessionId = ""
+                var secondSessionId = ""
+
+                val firstFuture = clientServiceFirst.findClient(SECOND_CLIENT_ID)
+                firstFuture.onGet { client, _ -> secondSessionId = client.sessionId }
+
+                val secondFuture = clientServiceSecond.findClient(FIRST_CLIENT_ID)
+                secondFuture.onGet { client, _ -> firstSessionId = client.sessionId }
+
+                firstFuture.await()
+                secondFuture.await()
+
+                firstSessionId.shouldBe(FIRST_CLIENT_ID)
+                secondSessionId.shouldBe(SECOND_CLIENT_ID)
             }
             "not find old clients" {
-                shouldThrow<ClientNotFoundException> {
-                    clientServiceFirst.findClient(THIRD_CLIENT_ID)
+                var success = false
+                val findFuture = clientServiceFirst.findClient(THIRD_CLIENT_ID)
+                findFuture.onNotFound {
+                    success = true
                 }
-                shouldThrow<ClientNotFoundException> {
-                    clientServiceSecond.findClient(THIRD_CLIENT_ID)
-                }
-            }
-            "find the correct peer address" {
-                clientServiceFirst.findClient(SECOND_CLIENT_ID).peerAddress.shouldBe(clientServiceSecond.peer.peerAddress())
+                findFuture.await()
+
+                success.shouldBeTrue()
             }
         }
     }
