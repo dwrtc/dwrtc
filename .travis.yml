@@ -21,6 +21,8 @@ cache:
   - $HOME/.gradle/wrapper
 
 script:
-- ./gradlew build
+- ./gradlew build -x test
 - ./gradlew test
+
+after_success:
 - ./gradlew sonarqube -Dsonar.projectKey=$SONAR_KEY -Dsonar.organization=$SONAR_ORGANZATION -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_LOGIN_TOKEN
