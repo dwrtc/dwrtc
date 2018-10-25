@@ -1,0 +1,4 @@
+[build]
+  publish = "build/javadoc"
+  command = "./gradlew dokka"
+
