@@ -48,11 +48,12 @@ fun BaseFuture.onFailure(emitter: (failedReason: String) -> Unit) {
  * @param transformer callable, to transform the DHT's response type to the method's return type.
  * Note: when the response is `null`, the transformer is skipped, and returns `null`
  */
+@Suppress("UNCHECKED_CAST")
 fun <T, U> FutureGet.onGetCustom(emitter: (data: U?, future: Future) -> Unit, transformer: (T) -> U) {
     this.addListener(object : BaseFutureAdapter<FutureGet>() {
         override fun operationComplete(future: FutureGet) {
-            val data = transformer(future.data()?.`object`() as T) ?: null
-            emitter(data, Future(future))
+            val data = future.data()?.`object`()
+            emitter(data?.let { transformer(it as T) }, Future(future))
         }
     })
 }
@@ -71,11 +72,12 @@ fun <T> FutureGet.onGet(emitter: (data: T?, future: Future) -> Unit) = this.onGe
  * @param transformer callable, to transform the DHT's response type to the method's return type.
  * Note: when the response is `null`, the transformer is skipped, and returns `null`
  */
+@Suppress("UNCHECKED_CAST")
 fun <T, U> FutureGet.onGetAllCustom(emitter: (data: U?, future: Future) -> Unit, transformer: (List<T>) -> U) {
     this.addListener(object : BaseFutureAdapter<FutureGet>() {
         override fun operationComplete(future: FutureGet) {
-            val list = future.dataMap().values.map { it.`object`() as T }
-            emitter(transformer(list), Future(future))
+            val list: List<T>? = future.dataMap()?.values?.map { it.`object`() as T }
+            emitter(list?.let { transformer(it) }, Future(future))
         }
     })
 }

@@ -2,11 +2,11 @@ package ch.hsr.dsl.dwrtc.signaling
 
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
 import ch.hsr.dsl.dwrtc.util.findFreePort
-import ch.hsr.dsl.dwrtc.util.onSuccess
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
+import util.onSuccess
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -122,8 +122,8 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
                 dhtFuture
         ) { peerAddress -> ExternalClient(sessionId, peerAddress, peer) }
 
-        future.onFailure { "find client with $sessionId failed" }
-        future.onSuccess { "find client with $sessionId successful" }
+        future.onFailure { logger.info { "find client with $sessionId failed" } }
+        future.onSuccess { logger.info { "find client with $sessionId successful" } }
 
         return future
     }

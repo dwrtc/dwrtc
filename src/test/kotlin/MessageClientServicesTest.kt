@@ -5,6 +5,7 @@ import io.kotlintest.extensions.TestListener
 import io.kotlintest.specs.WordSpec
 
 class MessageClientServicesTest : WordSpec(), TestListener {
+    override fun isInstancePerTest(): Boolean = true
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
 
     companion object {
@@ -16,7 +17,7 @@ class MessageClientServicesTest : WordSpec(), TestListener {
     private val peers = generateDHT(5)
 
     override fun afterTest(description: Description, result: TestResult) {
-        peers.forEach { it.shutdown().awaitListenersUninterruptibly() }
+        peers.forEach { it.shutdown().awaitListeners() }
     }
 
     init {
@@ -25,6 +26,9 @@ class MessageClientServicesTest : WordSpec(), TestListener {
 
         val (clientFirst, firstFuture) = clientServiceFirst.addClient(FIRST_CLIENT_ID)
         val (clientSecond, secondFuture) = clientServiceSecond.addClient(SECOND_CLIENT_ID)
+
+        firstFuture.await()
+        secondFuture.await()
 
         val externalClientSecondFuture = clientServiceFirst.findClient(SECOND_CLIENT_ID)
 

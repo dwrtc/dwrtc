@@ -8,6 +8,7 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 
 class BasicClientServiceTest : WordSpec(), TestListener {
+    override fun isInstancePerTest(): Boolean = true
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
 
     companion object {
@@ -25,10 +26,11 @@ class BasicClientServiceTest : WordSpec(), TestListener {
     init {
         val clientServiceFirst = ClientService(peers.first().peerAddress())
         val clientServiceSecond = ClientService(peers.last().peerAddress())
-        clientServiceFirst.addClient(FIRST_CLIENT_ID)
-        clientServiceSecond.addClient(SECOND_CLIENT_ID)
-        val (client, _) = clientServiceFirst.addClient(THIRD_CLIENT_ID)
-        clientServiceFirst.removeClient(client).await()
+        clientServiceFirst.addClient(FIRST_CLIENT_ID).second.await()
+        clientServiceSecond.addClient(SECOND_CLIENT_ID).second.await()
+        val (thirdClient, clientFuture) = clientServiceFirst.addClient(THIRD_CLIENT_ID)
+        clientFuture.await()
+        clientServiceFirst.removeClient(thirdClient).await()
 
         "Two Client Services" should {
             "find clients on the same one" {

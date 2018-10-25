@@ -3,6 +3,7 @@ package ch.hsr.dsl.dwrtc.signaling
 import ch.hsr.dsl.dwrtc.util.*
 import net.tomp2p.dht.FutureGet
 import net.tomp2p.futures.BaseFuture
+import util.*
 
 /**
  * Base class for all our Futures.
@@ -15,7 +16,10 @@ import net.tomp2p.futures.BaseFuture
  */
 open class Future(private val baseFuture: BaseFuture) {
     /** Await all registered listeners */
-    fun await() = Future(baseFuture.awaitListeners())
+    fun await() {
+        baseFuture.await()
+        baseFuture.awaitListeners()
+    }
 
     /** An operation has completed. Check [net.tomp2p.futures.BaseFuture.onComplete] for the full semantics
      *

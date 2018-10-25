@@ -119,6 +119,3 @@ fabric.properties
 # Desktop
 .DS_Store
 desktop.ini
-
-# Java Version
-.idea/misc.xml

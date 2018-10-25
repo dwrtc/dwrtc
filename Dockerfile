@@ -1,4 +1,4 @@
-FROM openjdk:10-jdk as builder
+FROM openjdk:11-jdk as builder
 WORKDIR /app
 COPY . .
 RUN ./gradlew --no-daemon build -x test pack

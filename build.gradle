@@ -4,7 +4,6 @@ plugins {
     id "org.jetbrains.dokka" version "0.9.17"
 }
 
-apply plugin: "jacoco"
 apply plugin: 'org.jetbrains.dokka'
 
 group = "ch.hsr.dsl.dwrtc"
