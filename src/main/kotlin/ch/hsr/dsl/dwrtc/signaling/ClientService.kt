@@ -71,12 +71,12 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         logger.info { "try to find client $sessionId" }
 
         val dhtFuture = peer.get(Number160.createHash(sessionId)).start()
-        val future = GetCustomFuture<IExternalClient, PeerAddress>(
-            dhtFuture
-        ) { peerAddress -> ExternalClient(sessionId, peerAddress, peer) }
+        val future = GetCustomFuture<IExternalClient, PeerAddress>(dhtFuture) { peerAddress ->
+            ExternalClient(sessionId, peerAddress, peer)
+        }
 
-        future.onFailure { "find client with $sessionId failed" }
-        future.onSuccess { "find client with $sessionId successful" }
+        future.onFailure { logger.info { "find client with $sessionId failed" } }
+        future.onSuccess { logger.info { "find client with $sessionId successful" } }
 
         return future
     }

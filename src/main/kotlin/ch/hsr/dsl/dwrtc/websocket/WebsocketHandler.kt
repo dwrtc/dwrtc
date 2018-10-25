@@ -35,7 +35,7 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         clientFuture.onSuccess {
             sessions[session.id] = session
 
-            client.onReceiveMessage { sender, messageDto -> onReceiveMessageFromSignaling(sender, messageDto) }
+            client.onReceiveMessage { _, messageDto -> onReceiveMessageFromSignaling(messageDto) }
             clients[session.id] = client
 
             val message = WebSocketIdMessage(session.id)
@@ -72,8 +72,8 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         }
     }
 
-    private fun onReceiveMessageFromSignaling(sender: IExternalClient, message: SignalingMessage) {
-        logger.info { "sending message ${message}" }
+    private fun onReceiveMessageFromSignaling(message: SignalingMessage) {
+        logger.info { "sending message $message" }
         sessions[message.recipientSessionId]?.let { it.send(toJson(message)) }
     }
 }
