@@ -3,7 +3,6 @@ package ch.hsr.dsl.dwrtc.signaling
 import ch.hsr.dsl.dwrtc.util.*
 import net.tomp2p.dht.FutureGet
 import net.tomp2p.futures.BaseFuture
-import util.*
 
 /**
  * Base class for all our Futures.

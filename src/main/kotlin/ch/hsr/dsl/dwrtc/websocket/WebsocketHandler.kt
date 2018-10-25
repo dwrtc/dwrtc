@@ -1,7 +1,6 @@
 package ch.hsr.dsl.dwrtc.websocket
 
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.IExternalClient
 import ch.hsr.dsl.dwrtc.signaling.IInternalClient
 import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.util.jsonTo
