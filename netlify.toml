@@ -1,0 +1,8 @@
+[build]
+  publish = "build/javadoc"
+  command = "./gradlew dokka"
+
+# A basic redirect rule
+[[redirects]]
+  from = "/"
+  to = "/dwrtc/"

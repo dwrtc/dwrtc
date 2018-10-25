@@ -3,18 +3,43 @@ package ch.hsr.dsl.dwrtc.signaling
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 
+/** Represents the own user */
 interface IInternalClient {
+    /**
+     * Send a message to an external user.
+     *
+     * @param messageBody the message body
+     * @param recipient the external user
+     *
+     * @return see [Future]
+     */
     fun sendMessage(messageBody: String, recipient: IExternalClient): Future
+
+    /**
+     * Register a listener that handles messages for this user
+     *
+     * @param emitter a callable that receives the sender and the actual message
+     */
     fun onReceiveMessage(emitter: (IExternalClient, SignalingMessage) -> Unit)
+
+    /** the user's session ID */
     val sessionId: String
 }
 
+/**
+ * Represents the own user.
+ *
+ * @property peer the TomP2P peer object
+ * @property clientService the ClientService
+ * @property sessionId the user's session ID
+ */
 class InternalClient(
-    private val peer: PeerDHT,
-    private val clientService: ClientService,
-    override val sessionId: String
+        private val peer: PeerDHT,
+        private val clientService: ClientService,
+        override val sessionId: String
 ) :
-    IInternalClient {
+        IInternalClient {
+    /** Logging companion */
     companion object : KLogging()
 
     override fun sendMessage(messageBody: String, recipient: IExternalClient): Future {
@@ -33,6 +58,7 @@ class InternalClient(
         clientService.addDirectMessageListener(sessionId, emitter)
     }
 
+    /** equals */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is InternalClient) return false
@@ -43,6 +69,7 @@ class InternalClient(
         return true
     }
 
+    /** hashcode */
     override fun hashCode(): Int {
         var result = peer.peerID().hashCode()
         result = 31 * result + sessionId.hashCode()

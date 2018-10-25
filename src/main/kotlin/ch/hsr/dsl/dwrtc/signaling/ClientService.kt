@@ -2,27 +2,64 @@ package ch.hsr.dsl.dwrtc.signaling
 
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
 import ch.hsr.dsl.dwrtc.util.findFreePort
+import ch.hsr.dsl.dwrtc.util.onSuccess
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
-import util.onSuccess
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-
+/** Connection to the P2P network */
 interface IClientService {
+    /** Add a new user.
+     *
+     * @param sessionId the user's session ID
+     * @returns the IInternalClient and Future (see [Future])
+     */
     fun addClient(sessionId: String): Pair<IInternalClient, Future>
+
+    /**
+     * Remove a user.
+     *
+     * @param client the client to remove
+     * @returns see [Future]
+     */
     fun removeClient(client: IInternalClient): Future
+
+    /**
+     * Find another user
+     *
+     * @param sessionId the user to find
+     *
+     * @returns see [Future]
+     */
     fun findClient(sessionId: String): GetFuture<IExternalClient>
+
+    /**
+     * Add a direct message listener. See [InternalClient.onReceiveMessage]
+     *
+     * @param sessionId the session ID this listener is added for
+     * @param emitter the callable to be called when a message is received
+     */
     fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit)
 }
 
+/**
+ * Connection to the P2P network.
+ *
+ * @constructor Creates a peer. Optionally, set the port this peer uses
+ * @param peerPort the port this peer uses
+ */
 class ClientService constructor(peerPort: Int? = findFreePort()) : IClientService {
+    /** Logging companion */
     companion object : KLogging()
 
+    /** The peer's ID */
     private val peerId = UUID.randomUUID().toString()
+    /** The TomP2P peer */
     internal var peer: PeerDHT
+    /** Map of user's session ID to their message handlers. See [InternalClient.onReceiveMessage] */
     private val emitterMap = ConcurrentHashMap<String, (ExternalClient, SignalingMessage) -> Unit>()
 
     init {
@@ -36,12 +73,22 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         setupDirectMessageListener()
     }
 
+    /** Creates a peer and bootstraps. Optionally, set the port this peer uses.
+     *
+     * @param bootstrapPeerAddress the peer address to bootstrap with
+     * @param peerPort the port this peer uses
+     */
     constructor(bootstrapPeerAddress: PeerAddress, peerPort: Int? = findFreePort()) : this(peerPort) {
         logger.info { "bootstrapping with address:$bootstrapPeerAddress" }
         bootstrapPeer(bootstrapPeerAddress).onSuccess { logger.info { "bootstrapping completed" } }
-
     }
 
+    /**
+     *
+     * @param bootstrapIp the peer's IP to bootstrap with
+     * @param bootstrapPort the peer's port to bootstrap with
+     * @param peerPort the port this peer uses
+     */
     constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this(peerPort) {
         if (bootstrapIp != null && bootstrapPort != null) {
             logger.info { "bootstrapping with $bootstrapIp:$bootstrapPort" }
@@ -71,9 +118,9 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         logger.info { "try to find client $sessionId" }
 
         val dhtFuture = peer.get(Number160.createHash(sessionId)).start()
-        val future = GetCustomFuture<IExternalClient, PeerAddress>(dhtFuture) { peerAddress ->
-            ExternalClient(sessionId, peerAddress, peer)
-        }
+        val future = GetCustomFuture<IExternalClient, PeerAddress>(
+                dhtFuture
+        ) { peerAddress -> ExternalClient(sessionId, peerAddress, peer) }
 
         future.onFailure { logger.info { "find client with $sessionId failed" } }
         future.onSuccess { logger.info { "find client with $sessionId successful" } }
@@ -85,18 +132,30 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         emitterMap[sessionId] = emitter
     }
 
+    /**
+     * Bootstrap our peer to another peer
+     *
+     * @param peerAddress the peer to bootstrap to
+     */
     private fun bootstrapPeer(peerAddress: PeerAddress) = peer.peer()
-        .bootstrap()
-        .peerAddress(peerAddress)
-        .start().awaitListeners()
+            .bootstrap()
+            .peerAddress(peerAddress)
+            .start().awaitListeners()
 
+    /**
+     * Bootstrap our peer to another peer
+     *
+     * @param peerDetails the peer to bootstrap to
+     */
     private fun bootstrapPeer(peerDetails: PeerConnectionDetails) = peer.peer()
-        .bootstrap()
-        .inetAddress(peerDetails.ipAddress)
-        .ports(peerDetails.port)
-        .start().awaitListeners()
+            .bootstrap()
+            .inetAddress(peerDetails.ipAddress)
+            .ports(peerDetails.port)
+            .start().awaitListeners()
 
+    /** Setup the dispatcher to send the incoming messages to the correct user */
     private fun setupDirectMessageListener() {
+        /** Dispatch the actual message */
         fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {
             val recipientSessionId = signalingMessage.recipientSessionId!!
             val senderSessionId = signalingMessage.senderSessionId!!
@@ -108,6 +167,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
             }
         }
 
+        /** Only dispatch a message if it's actually one of our own messages */
         fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
             logger.info { "got message $messageDto" }
             return if (messageDto is SignalingMessage) {
@@ -123,3 +183,4 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         }
     }
 }
+

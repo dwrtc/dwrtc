@@ -1,7 +1,10 @@
 plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.70"
     id "org.sonarqube" version "2.6"
+    id "org.jetbrains.dokka" version "0.9.17"
 }
+
+apply plugin: 'org.jetbrains.dokka'
 
 group = "ch.hsr.dsl.dwrtc"
 version = "1.0-SNAPSHOT"
@@ -16,6 +19,7 @@ ext {
     kotlinTestVersion = "3.1.+"
     konfigVersion = "1.6.10.+"
     http4kVersion = "3.39.1"
+    dokkaVersion = "0.9.17"
 }
 
 repositories {
@@ -46,6 +50,7 @@ dependencies {
     testCompile "org.http4k:http4k-client-websocket:${http4kVersion}"
     testCompile "io.kotlintest:kotlintest-runner-junit5:${kotlinTestVersion}"
 }
+
 test {
     useJUnitPlatform {}
 }
@@ -72,4 +77,13 @@ task pack(type: Jar) {
 task downloadDependencies(type: Exec) {
     configurations.testRuntime.files
     commandLine 'echo', 'Downloaded all dependencies'
+}
+
+dokka {
+    reportUndocumented = true
+    includeNonPublic = true
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/javadoc"
+    includes = ['docs/main.md', 'docs/signaling.md', 'docs/signaling.exceptions.md', 'docs/websocket.md', 'docs/util.md']
+
 }
