@@ -9,7 +9,7 @@ abstract class IExternalClient {
      * Send a message to this user
      *
      * @param messageBody the message body
-     * @return a future. See [Future]
+     * @return see [Future]
      */
     internal abstract fun sendMessage(messageBody: String): Future
 

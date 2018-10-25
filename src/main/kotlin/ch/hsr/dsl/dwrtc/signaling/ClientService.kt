@@ -15,7 +15,7 @@ interface IClientService {
     /** Add a new user.
      *
      * @param sessionId the user's session ID
-     * @returns the built InternalClient
+     * @returns the IInternalClient and Future (see [Future])
      */
     fun addClient(sessionId: String): Pair<IInternalClient, Future>
 
@@ -23,6 +23,7 @@ interface IClientService {
      * Remove a user.
      *
      * @param client the client to remove
+     * @returns see [Future]
      */
     fun removeClient(client: IInternalClient): Future
 
@@ -30,7 +31,8 @@ interface IClientService {
      * Find another user
      *
      * @param sessionId the user to find
-     * @throws ClientNotFoundException when a user is not found
+     *
+     * @returns see [Future]
      */
     fun findClient(sessionId: String): GetFuture<IExternalClient>
 

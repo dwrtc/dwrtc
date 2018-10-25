@@ -10,6 +10,8 @@ interface IInternalClient {
      *
      * @param messageBody the message body
      * @param recipient the external user
+     *
+     * @return see [Future]
      */
     fun sendMessage(messageBody: String, recipient: IExternalClient): Future
 
