@@ -32,7 +32,7 @@ fun BaseFuture.onSuccess(emitter: () -> Unit) {
 /**
  * Raised whenever an operation has failed
  *
- * TomP2P defines failure, such that *there's a connection problem*
+ * TomP2P defines failure, such that *there's a connection problem*.
  * Therefore, this only fires in cases where the DHT connection
  *
  * @param emitter callable, when the operation has failed

@@ -4,11 +4,25 @@ import ch.hsr.dsl.dwrtc.util.*
 import net.tomp2p.dht.FutureGet
 import net.tomp2p.futures.BaseFuture
 
+/**
+ * Base class for all our Futures.
+ *
+ * This mainly decouples our Futures from the TomP2P Futures. This means, users of this class need not import TomP2P.
+ *
+ * Note: DO have a look at how TomP2P defines [completion][net.tomp2p.futures.BaseFuture.onComplete], [success][net.tomp2p.futures.BaseFuture.onSuccess] and [failure][net.tomp2p.futures.BaseFuture.onFailure] before using this!
+ */
 open class Future(private val baseFuture: BaseFuture) {
-	fun await() = Future(baseFuture.awaitListeners())
+    /** Await all registered listeners */
+    fun await() = Future(baseFuture.awaitListeners())
+
+    /** An operation has completed. Check [net.tomp2p.futures.BaseFuture.onComplete] for the full semantics */
     fun onComplete(emitter: () -> Unit) = baseFuture.onComplete { emitter() }
-	fun onSuccess(emitter: () -> Unit) = baseFuture.onSuccess(emitter)
-	fun onFailure(emitter: (failedReason: String) -> Unit) = baseFuture.onFailure(emitter)
+
+    /** A response has been received. Check [net.tomp2p.futures.BaseFuture.onSuccess] for the full semantics */
+    fun onSuccess(emitter: () -> Unit) = baseFuture.onSuccess(emitter)
+
+    /** The connection has failed. Check [net.tomp2p.futures.BaseFuture.onFailure] for the full semantics */
+    fun onFailure(emitter: (failedReason: String) -> Unit) = baseFuture.onFailure(emitter)
 }
 
 open class GetFuture<T>(private val futureGet: FutureGet) : Future(futureGet) {
@@ -30,5 +44,4 @@ class GetAllCustomFuture<T, U>(private val futureGet: FutureGet, private val tra
 
     override fun onNotFound(emitter: () -> Unit) =
             futureGet.onGetAllCustom({ data: T?, _ -> if (data == null) emitter() }, transformer)
-
 }
