@@ -39,7 +39,6 @@ class WebSocketBehaviorTest : WordSpec(), TestListener {
 
             val message = SignalingMessage(null, clientOneId, "Hello World")
             clientTwo.send(WsMessage(toJson(message)))
-            // ID is already consumed
             val receivedMessageString = clientOne.received().take(1).toList().first().bodyString()
             val receivedMessage = jsonTo<SignalingMessage>(receivedMessageString)
 
