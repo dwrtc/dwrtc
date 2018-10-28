@@ -81,7 +81,10 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
                         messageDto.messageBody,
                         recipient
                 )
-                sendFuture.onFailure { logger.error { "message could not be sent to the P2P layer" } }
+                sendFuture.onFailure {
+                    logger.error { "message could not be sent to the P2P layer" }
+                    session.send(toJson(WebSocketErrorMessage("message could not be sent to the P2P layer")))
+                }
                 sendFuture.onSuccess { logger.debug { "message could be sent to the P2P layer" } }
             }
         }
