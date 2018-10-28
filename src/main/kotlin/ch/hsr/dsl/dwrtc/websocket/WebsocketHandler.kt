@@ -76,11 +76,13 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
 
         val future = signallingService.findClient(messageDto.recipientSessionId!!)
         future.onGet { recipient, _ ->
-            clients[session.id]?.let {
-                it.sendMessage(
+            clients[session.id]?.let { it ->
+                val sendFuture = it.sendMessage(
                         messageDto.messageBody,
                         recipient
                 )
+                sendFuture.onFailure { logger.error { "message could not be sent to the P2P layer" } }
+                sendFuture.onSuccess { logger.debug { "message could be sent to the P2P layer" } }
             }
         }
         future.onNotFound { session.send(toJson(WebSocketErrorMessage("not found"))) }
@@ -110,6 +112,7 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
      *
      * Sends the message to the recipient via WebSocket
      */
+    @Synchronized
     private fun onReceiveMessageFromSignaling(message: SignalingMessage) {
         logger.info { "sending message $message" }
         sessions[message.recipientSessionId]?.let { it.send(toJson(message)) }

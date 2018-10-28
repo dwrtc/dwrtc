@@ -12,7 +12,7 @@ version = "1.0-SNAPSHOT"
 
 ext {
     tomP2PVersion = "5.0-Beta8"
-    javalinVersion = "2.2.+"
+    javalinVersion = "2.3.+"
     jacksonVersion = "2.9.+"
     slf4JVersion = "1.7.+"
     kotlinLoggingVersion = "1.6.+"

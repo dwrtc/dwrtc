@@ -11,7 +11,7 @@ abstract class IExternalClient {
      * @param messageBody the message body
      * @return see [Future]
      */
-    internal abstract fun sendMessage(messageBody: String): Future
+    internal abstract fun sendMessage(messageBody: String, senderSessionId: String): Future
 
     /** the user's session ID */
     abstract val sessionId: String
@@ -24,10 +24,10 @@ abstract class IExternalClient {
  */
 class ExternalClient(override val sessionId: String, val peerAddress: PeerAddress, val peer: PeerDHT) :
         IExternalClient() {
-    override fun sendMessage(messageBody: String) = Future(
+    override fun sendMessage(messageBody: String, senderSessionId: String) = Future(
             peer.peer()
                     .sendDirect(peerAddress)
-                    .`object`(SignalingMessage(sessionId, sessionId, messageBody))
+                    .`object`(SignalingMessage(senderSessionId, this.sessionId, messageBody))
                     .start()
     )
 
