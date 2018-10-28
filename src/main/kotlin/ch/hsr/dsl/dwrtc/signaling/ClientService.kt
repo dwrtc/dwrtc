@@ -122,8 +122,9 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
                 dhtFuture
         ) { peerAddress -> ExternalClient(sessionId, peerAddress, peer) }
 
-        future.onFailure { logger.info { "find client with $sessionId failed" } }
-        future.onSuccess { logger.info { "find client with $sessionId successful" } }
+        future.onFailure { logger.info { "find client with $sessionId failed completely" } }
+        future.onNotFound { logger.info { "find client with $sessionId failed (not found)" } }
+        future.onGet { _, _ -> logger.info { "find client with $sessionId successful" } }
 
         return future
     }
