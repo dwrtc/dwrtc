@@ -45,7 +45,7 @@ class InternalClient(
     override fun sendMessage(messageBody: String, recipient: IExternalClient): Future {
         logger.info { "send message $messageBody from ${peer.peerAddress()} to $recipient" }
 
-        val result = recipient.sendMessage(messageBody)
+        val result = recipient.sendMessage(messageBody, this.sessionId)
         logger.info { "sent message $messageBody from ${peer.peerAddress()} to $recipient" }
         result.onFailure { logger.info { "send message failed: $it" } }
         result.onSuccess { logger.info { "message sent successfully" } }
