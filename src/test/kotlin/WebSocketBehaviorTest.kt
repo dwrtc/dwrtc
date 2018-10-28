@@ -46,6 +46,19 @@ class WebSocketBehaviorTest : WordSpec(), TestListener {
             clientTwo.send(WsMessage(toJson(invalidIdMessage)))
             val invalidIdReply = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
 
+            clientOne.close()
+            clientTwo.send(WsMessage(toJson(message)))  // re-send original message
+            val sendingErrorReply = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
+
+            // This test DEPENDS on the fact, that it takes a while for removeClient to do its work
+            // At first, we receive that we had a problem sending the message
+            // After waiting some time, we should receive that the client could not be found
+            Thread.sleep(1000)
+
+            clientTwo.send(WsMessage(toJson(message)))  // re-send original message
+            val notFoundReply = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
+
+
             "be able to send messages" {
                 receivedMessage.messageBody.shouldBe("Hello World")
             }
@@ -54,6 +67,10 @@ class WebSocketBehaviorTest : WordSpec(), TestListener {
             }
             "get an error message when sending to an unknown client" {
                 invalidIdReply.error.shouldBe("not found")
+            }
+            "get an error message when sending to a client that closed its session" {
+                sendingErrorReply.error.shouldBe("message could not be sent to the P2P layer")
+                notFoundReply.error.shouldBe("not found")
             }
         }
     }
