@@ -1,4 +1,5 @@
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
+import io.kotlintest.matchers.boolean.shouldBeTrue
 import net.tomp2p.dht.PeerDHT
 import java.util.*
 
@@ -15,4 +16,8 @@ fun generateDHT(numberOfPeers: Int): List<PeerDHT> {
         peers.add(peer)
     }
     return peers
+}
+
+fun success() {
+    true.shouldBeTrue()
 }
