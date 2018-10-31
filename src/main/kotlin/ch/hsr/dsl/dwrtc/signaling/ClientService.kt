@@ -73,7 +73,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         setupDirectMessageListener()
     }
 
-    /** Creates a peer and bootstraps. Optionally, set the port this peer uses.
+    /** Creates a peer and bootstraps with a given TomP2P Peer Address. Optionally, set the port this peer uses.
      *
      * @param bootstrapPeerAddress the peer address to bootstrap with
      * @param peerPort the port this peer uses
@@ -83,7 +83,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         bootstrapPeer(bootstrapPeerAddress).onSuccess { logger.info { "bootstrapping completed" } }
     }
 
-    /**
+    /** Creates a peer and bootstraps with a given IP/port pair. Optionally, set the port this peer uses.
      *
      * @param bootstrapIp the peer's IP to bootstrap with
      * @param bootstrapPort the peer's port to bootstrap with
