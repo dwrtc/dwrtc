@@ -26,18 +26,18 @@ class BasicClientServiceTest : WordSpec(), TestListener {
     init {
         val clientServiceFirst = ClientService(peers.first().peerAddress())
         val clientServiceSecond = ClientService(peers.last().peerAddress())
-        clientServiceFirst.addClient(FIRST_CLIENT_ID).second.await()
-        clientServiceSecond.addClient(SECOND_CLIENT_ID).second.await()
+        clientServiceFirst.addClient(FIRST_CLIENT_ID).second.awaitListeners()
+        clientServiceSecond.addClient(SECOND_CLIENT_ID).second.awaitListeners()
         val (thirdClient, clientFuture) = clientServiceFirst.addClient(THIRD_CLIENT_ID)
-        clientFuture.await()
-        clientServiceFirst.removeClient(thirdClient).await()
+        clientFuture.onComplete { clientServiceFirst.removeClient(thirdClient).awaitListeners() }
+        clientFuture.awaitListeners().await()
 
         "Two Client Services" should {
             "find clients on the same one" {
                 var sessionId = ""
                 val future = clientServiceFirst.findClient(FIRST_CLIENT_ID)
-                future.onGet { externalClient, _ -> sessionId = externalClient.sessionId }
-                future.await()
+                future.onGet { externalClient -> sessionId = externalClient.sessionId }
+                future.awaitListeners().await()
                 sessionId.shouldBe(FIRST_CLIENT_ID)
             }
             "find clients of another one" {
@@ -45,13 +45,13 @@ class BasicClientServiceTest : WordSpec(), TestListener {
                 var secondSessionId = ""
 
                 val firstFuture = clientServiceFirst.findClient(SECOND_CLIENT_ID)
-                firstFuture.onGet { client, _ -> secondSessionId = client.sessionId }
+                firstFuture.onGet { client -> secondSessionId = client.sessionId }
 
                 val secondFuture = clientServiceSecond.findClient(FIRST_CLIENT_ID)
-                secondFuture.onGet { client, _ -> firstSessionId = client.sessionId }
+                secondFuture.onGet { client -> firstSessionId = client.sessionId }
 
-                firstFuture.await()
-                secondFuture.await()
+                firstFuture.awaitListeners()
+                secondFuture.awaitListeners()
 
                 firstSessionId.shouldBe(FIRST_CLIENT_ID)
                 secondSessionId.shouldBe(SECOND_CLIENT_ID)
@@ -62,7 +62,7 @@ class BasicClientServiceTest : WordSpec(), TestListener {
                 findFuture.onNotFound {
                     success = true
                 }
-                findFuture.await()
+                findFuture.awaitListeners()
 
                 success.shouldBeTrue()
             }

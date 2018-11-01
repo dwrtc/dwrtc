@@ -1,6 +1,5 @@
 package ch.hsr.dsl.dwrtc.util
 
-import ch.hsr.dsl.dwrtc.signaling.Future
 import net.tomp2p.dht.FutureGet
 import net.tomp2p.futures.BaseFuture
 import net.tomp2p.futures.BaseFutureAdapter
@@ -49,11 +48,11 @@ fun BaseFuture.onFailure(emitter: (failedReason: String) -> Unit) {
  * Note: when the response is `null`, the transformer is skipped, and returns `null`
  */
 @Suppress("UNCHECKED_CAST")
-fun <T, U> FutureGet.onGetCustom(emitter: (data: U?, future: Future) -> Unit, transformer: (T) -> U) {
+fun <T, U> FutureGet.onGetCustom(emitter: (data: U?, future: BaseFuture) -> Unit, transformer: (T) -> U) {
     this.addListener(object : BaseFutureAdapter<FutureGet>() {
         override fun operationComplete(future: FutureGet) {
             val data = future.data()?.`object`()
-            emitter(data?.let { transformer(it as T) }, Future(future))
+            emitter(data?.let { transformer(it as T) }, future)
         }
     })
 }
@@ -63,7 +62,7 @@ fun <T, U> FutureGet.onGetCustom(emitter: (data: U?, future: Future) -> Unit, tr
  *
  * @param emitter callable, when the response has been received
  */
-fun <T> FutureGet.onGet(emitter: (data: T?, future: Future) -> Unit) = this.onGetCustom<T, T>(emitter, { it })
+fun <T> FutureGet.onGet(emitter: (data: T?, future: BaseFuture) -> Unit) = this.onGetCustom<T, T>(emitter, { it })
 
 /**
  * A response has been received (for multiple elements) and you need to transform them, before returning.
@@ -73,11 +72,11 @@ fun <T> FutureGet.onGet(emitter: (data: T?, future: Future) -> Unit) = this.onGe
  * Note: when the response is `null`, the transformer is skipped, and returns `null`
  */
 @Suppress("UNCHECKED_CAST")
-fun <T, U> FutureGet.onGetAllCustom(emitter: (data: U?, future: Future) -> Unit, transformer: (List<T>) -> U) {
+fun <T, U> FutureGet.onGetAllCustom(emitter: (data: U?, future: BaseFuture) -> Unit, transformer: (List<T>) -> U) {
     this.addListener(object : BaseFutureAdapter<FutureGet>() {
         override fun operationComplete(future: FutureGet) {
             val list: List<T>? = future.dataMap()?.values?.map { it.`object`() as T }
-            emitter(list?.let { transformer(it) }, Future(future))
+            emitter(list?.let { transformer(it) }, future)
         }
     })
 }
@@ -87,6 +86,6 @@ fun <T, U> FutureGet.onGetAllCustom(emitter: (data: U?, future: Future) -> Unit,
  *
  * @param emitter callable, when the response has been received
  */
-fun <T> FutureGet.onGetAll(emitter: (data: List<T>?, future: Future) -> Unit) {
+fun <T> FutureGet.onGetAll(emitter: (data: List<T>?, future: BaseFuture) -> Unit) {
     this.onGetAllCustom<T, List<T>>(emitter, { it })
 }

@@ -15,10 +15,10 @@ import net.tomp2p.futures.BaseFuture
  */
 open class Future(private val baseFuture: BaseFuture) {
     /** Await all registered listeners */
-    fun await() {
-        baseFuture.await()
-        baseFuture.awaitListeners()
-    }
+    fun awaitListeners() = Future(baseFuture.awaitListeners())
+
+    /** Await async operation to end */
+    fun await() = Future(baseFuture.await())
 
     /** An operation has completed. Check [net.tomp2p.futures.BaseFuture.onComplete] for the full semantics
      *
@@ -61,8 +61,8 @@ open class GetFuture<T>(private val futureGet: FutureGet) : Future(futureGet) {
      *
      * @param emitter callable, when the data bas been found
      */
-    open fun onGet(emitter: (data: T, future: Future) -> Unit) =
-            futureGet.onGet { data: T?, future -> if (data != null) emitter(data, future) }
+    open fun onGet(emitter: (data: T) -> Unit) =
+        futureGet.onGet { data: T?, future -> if (future.isSuccess && data != null) emitter(data) }
 
     /**
      * A single element has not been found
@@ -86,8 +86,8 @@ open class GetCustomFuture<T, U>(private val futureGet: FutureGet, private val t
      *
      * @param emitter callable, when the response has been found
      */
-    override fun onGet(emitter: (data: T, future: Future) -> Unit) =
-            futureGet.onGetCustom({ data: T?, future -> if (data != null) emitter(data, future) }, transformer)
+    override fun onGet(emitter: (data: T) -> Unit) =
+        futureGet.onGetCustom({ data: T?, future -> if (future.isSuccess && data != null) emitter(data) }, transformer)
 }
 
 /** Get multiple elements and transform them
@@ -101,8 +101,11 @@ class GetAllCustomFuture<T, U>(private val futureGet: FutureGet, private val tra
      *
      * @param emitter callable, when the response has been found
      */
-    override fun onGet(emitter: (data: T, future: Future) -> Unit) =
-            futureGet.onGetAllCustom({ data: T?, future: Future -> if (data != null) emitter(data, future) }, transformer)
+    override fun onGet(emitter: (data: T) -> Unit) =
+        futureGet.onGetAllCustom(
+            { data: T?, future -> if (future.isSuccess && data != null) emitter(data) },
+            transformer
+        )
 
     /**
      * Multiple elements have not been found
@@ -110,5 +113,5 @@ class GetAllCustomFuture<T, U>(private val futureGet: FutureGet, private val tra
      * @param emitter callable, when the data has not been found
      */
     override fun onNotFound(emitter: () -> Unit) =
-            futureGet.onGetAllCustom({ data: T?, _ -> if (data == null) emitter() }, transformer)
+        futureGet.onGetAllCustom({ data: T?, future -> if (future.isSuccess && data == null) emitter() }, transformer)
 }

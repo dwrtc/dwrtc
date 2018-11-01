@@ -75,7 +75,7 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         messageDto.senderSessionId = session.id
 
         val future = signallingService.findClient(messageDto.recipientSessionId!!)
-        future.onGet { recipient, _ ->
+        future.onGet { recipient ->
             clients[session.id]?.let { it ->
                 val sendFuture = it.sendMessage(
                         messageDto.messageBody,

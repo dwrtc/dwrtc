@@ -1,5 +1,5 @@
+sudo: required
 language: java
-install: true
 
 jdk:
 - openjdk11
