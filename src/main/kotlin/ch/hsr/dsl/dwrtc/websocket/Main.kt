@@ -3,13 +3,12 @@ package ch.hsr.dsl.dwrtc.websocket
 import ch.hsr.dsl.dwrtc.signaling.ClientService
 import ch.hsr.dsl.dwrtc.util.*
 import io.javalin.Javalin
-import io.javalin.staticfiles.Location
 
 /** Main start point. Fires up the Webserver. */
 fun main(args: Array<String>) {
     val app = Javalin.create()
-            .enableStaticFiles("src/main/resources/public/", Location.EXTERNAL)
-            // or .enableStaticFiles("/public") to use Class Path
+            // .enableStaticFiles("src/main/resources/public/", Location.EXTERNAL)
+            .enableStaticFiles("/public")
             .start(config[WEBSERVER_PORT])
 
     val clientService =
