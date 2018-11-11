@@ -4,6 +4,8 @@ import com.natpryce.konfig.*
 
 /** The port the TomP2P peer runs on */
 val PEER_PORT = Key("peer.port", intType)
+/** The IP the Webserver runs on */
+val WEBSERVER_IP = Key("http.ip", stringType)
 /** The port the Webserver runs on */
 val WEBSERVER_PORT = Key("http.port", intType)
 /** The IP to bootstrap to */
