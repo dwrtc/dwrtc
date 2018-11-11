@@ -1,6 +1,6 @@
 "use strict"
 
-const wsProtocol = location.protocol === "https" ? "wss" : "ws" // in a perfect world, it's always wss
+const wsProtocol = location.protocol === "https:" ? "wss" : "ws" // in a perfect world, it's always wss
 const webSocketUrl = `${wsProtocol}://${location.host}/ws`
 
 const elements = []
