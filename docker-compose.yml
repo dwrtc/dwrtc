@@ -1,8 +1,22 @@
 version: '3'
 services:
-  dwrtc:
+  node1:
+    build: .
+    ports:
+    - 7000
+    links:
+    - node2
+    environment:
+      PEER_PORT: 7532
+      BOOTSTRAP_IP: node2
+      BOOTSTRAP_PORT: 7532
+  node2:
     build: .
     ports:
     - 7000
     environment:
-      server.ip: 0.0.0.0
+      PEER_PORT: 7532
+      BOOTSTRAP_IP: node1
+      BOOTSTRAP_PORT: 7532
+
+

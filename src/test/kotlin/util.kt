@@ -1,3 +1,5 @@
+package test
+
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
 import io.kotlintest.matchers.boolean.shouldBeTrue
 import net.tomp2p.dht.PeerDHT

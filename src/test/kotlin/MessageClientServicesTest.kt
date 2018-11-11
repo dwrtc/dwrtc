@@ -1,3 +1,5 @@
+package test
+
 import ch.hsr.dsl.dwrtc.signaling.ClientService
 import ch.hsr.dsl.dwrtc.signaling.IExternalClient
 import io.kotlintest.Description

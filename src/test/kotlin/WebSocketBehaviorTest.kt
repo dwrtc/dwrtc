@@ -1,3 +1,5 @@
+package test
+
 import ch.hsr.dsl.dwrtc.signaling.ClientService
 import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.util.findFreePort
@@ -32,13 +34,10 @@ class WebSocketBehaviorTest : WordSpec(), TestListener {
             WebSocketHandler(app, service)
             val clientOne = WebsocketClient.blocking(wsUri)
             val clientTwo = WebsocketClient.blocking(wsUri)
-            val clientThree = WebsocketClient.blocking(wsUri)
             val clientOneIdMessage = clientOne.received().take(1).toList().first().bodyString()
             val clientOneId = jsonTo<WebSocketIdMessage>(clientOneIdMessage).id
             val clientTwoIdMessage = clientTwo.received().take(1).toList().first().bodyString()
             val clientTwoId = jsonTo<WebSocketIdMessage>(clientTwoIdMessage).id
-            val clientThreeIdMessage = clientThree.received().take(1).toList().first().bodyString()
-            val clientThreeId = jsonTo<WebSocketIdMessage>(clientThreeIdMessage).id
 
             val message = SignalingMessage(null, clientOneId, "Hello World")
             clientTwo.send(WsMessage(toJson(message)))
