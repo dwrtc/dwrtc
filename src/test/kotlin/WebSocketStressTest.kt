@@ -1,3 +1,5 @@
+package test
+
 import ch.hsr.dsl.dwrtc.signaling.ClientService
 import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.util.findFreePort
@@ -48,6 +50,8 @@ class WebSocketStressTest : WordSpec(), TestListener {
                 sentMessages.add(wsMessage)
                 clientTwo.send(wsMessage)
             }
+
+            Thread.sleep(200) // Give it some time to handle the messages
 
             val receivedMessages = clientOne.received().take(n).toList()
 
