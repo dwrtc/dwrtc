@@ -1,3 +1,5 @@
+package test
+
 import ch.hsr.dsl.dwrtc.signaling.ClientService
 import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.util.findFreePort

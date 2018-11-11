@@ -1,3 +1,5 @@
+package test
+
 import ch.hsr.dsl.dwrtc.signaling.ClientService
 import io.kotlintest.Description
 import io.kotlintest.TestCaseOrder
