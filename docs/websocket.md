@@ -24,7 +24,7 @@ When connected to the WebSocket, an implementation can send or receive the follo
 ### Send
 
 * `ClientMessage`. Send a black box signaling message to another peer.
-  * `type`: The message type. Can be defined by the developer. E.g. "SignalingMessage" for WebRTC signaling messages and "CustomMessage" for custom messages.
+  * `type`: The message type. Has to be defined by the developer. E.g. "SignalingMessage" for WebRTC signaling messages and "CustomMessage" for custom messages.
   * `recipientSessionId: String`. The recipient's session ID. Used for routing.
   * `messageBody: String`. The free-form message body. To the transport layer, this is a black box.
   
