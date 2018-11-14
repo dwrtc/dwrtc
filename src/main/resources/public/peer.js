@@ -3,9 +3,7 @@
 const wsProtocol = location.protocol === "https:" ? "wss" : "ws" // in a perfect world, it's always wss
 const webSocketUrl = `${wsProtocol}://${location.host}/ws`
 
-const elements = []
-// TODO why does this need to be a named constant? "inline" doesn't seem to work
-const elementIds = [
+const elements = getElementsArrayById([
   "connectNormal",
   "otherPeerId",
   "connectToSession",
@@ -19,14 +17,19 @@ const elementIds = [
   "otherVideo",
   "errorOverlay",
   "errorMessage"
-]
-elementIds.forEach(e => (elements[e] = document.getElementById(e)))
+])
 
 class SignalingMessage {
   constructor(recipientSessionId, messageBody) {
     this.recipientSessionId = recipientSessionId
     this.messageBody = messageBody
   }
+}
+
+const getElementsArrayById = ids => {
+  const elements = []
+  ids.forEach(e => (elements[e] = document.getElementById(e)))
+  return elements
 }
 
 /**
@@ -36,6 +39,7 @@ window.onload = () => {
   elements["connectNormal"].onclick = event => {
     event.preventDefault()
     startDwrtc(false)
+    hideIdMessage()
   }
   elements["connectToSession"].onclick = event => {
     if (elements["connectToSessionForm"].checkValidity()) {
@@ -58,6 +62,10 @@ const showOutput = () => {
 
 const hideIdMessage = () => {
   elements["idMessage"].hidden = true
+}
+
+const showIdMessage = () => {
+  elements["idMessage"].hidden = false
 }
 
 const showOtherVideo = () => {
@@ -109,72 +117,40 @@ class DWRTC {
    * This is a separate method to the constructor, since constructors are not allowed to be async
    */
   async setup() {
-    await this.startSimplePeer()
     await this.setupSocket()
-    this.completeSimplePeerSetup()
+    await this.startSimplePeer()
+  }
+
+  /**
+   * Get video / audio stream
+   */
+  getStream(video = true, audio = true) {
+    let stream
+    try {
+      stream = navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      })
+    } catch (error) {
+      throw error
+    }
+    return stream
   }
 
   /**
    * Initialize the peer with the information we have so far
    */
   async startSimplePeer() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
-      })
-      elements["yourVideo"].srcObject = stream
-      elements["yourVideo"].play()
-      elements["yourVideo"].muted = true
-      this.peer = new window.SimplePeer({
-        initiator: this.isInitiator,
-        stream: stream
-      })
-    } catch (error) {
-      throw error
-    }
-    // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
-    // "It's possible for the returned promise to neither resolve nor reject,
-    // as the user is not required to make a choice at all and may simply ignore the request."
-    console.debug("SimplePeer started")
-  }
+    const stream = await this.getStream()
 
-  /** Initialize the websocket completely */
-  async setupSocket() {
-    this.socket = new WebSocket(webSocketUrl)
+    elements["yourVideo"].srcObject = stream
+    elements["yourVideo"].play()
+    elements["yourVideo"].muted = true
+    this.peer = new window.SimplePeer({
+      initiator: this.isInitiator,
+      stream: stream
+    })
 
-    await this.webSocketIsReady()
-    this.socket.onclose = event => {
-      const message = `Websocket closed (Reason ${event.reason}, Code ${
-        event.code
-      })`
-      console.error(message)
-      showError(message)
-    }
-
-    this.socket.onerror = event => {
-      const message = `Websocket errored: (${event})`
-      console.error(message)
-      showError(message)
-    }
-
-    this.socket.onmessage = event => this.handleWebSocketMessage(event)
-    console.debug("Websocket set up")
-  }
-
-  async webSocketIsReady() {
-    await new Promise(
-      function(resolve, reject) {
-        this.socket.onopen = _ => resolve()
-      }.bind(this)
-    )
-  }
-
-  /**
-   * Make the Simple Peer configuration complete
-   * This needs to run in a separate step than setupSimplePeer(), since we first need to set up the socket
-   */
-  completeSimplePeerSetup() {
     this.peer.on("signal", data => {
       // Peer wants to send signaling data
       console.debug(`Send Signal message: ${data}`)
@@ -190,6 +166,44 @@ class DWRTC {
       elements["otherVideo"].srcObject = stream
       elements["otherVideo"].play()
     })
+    showIdMessage()
+
+    // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+    // "It's possible for the returned promise to neither resolve nor reject,
+    // as the user is not required to make a choice at all and may simply ignore the request."
+    console.debug("SimplePeer started")
+  }
+
+  /** Initialize the websocket completely */
+  async setupSocket() {
+    this.socket = new WebSocket(webSocketUrl)
+
+    this.socket.onmessage = event => this.handleWebSocketMessage(event)
+
+    this.socket.onclose = event => {
+      const message = `Websocket closed (Reason ${event.reason}, Code ${
+        event.code
+      })`
+      console.error(message)
+      showError(message)
+    }
+
+    this.socket.onerror = event => {
+      const message = `Websocket errored: (${event})`
+      console.error(message)
+      showError(message)
+    }
+
+    await this.webSocketIsReady()
+    console.debug("Websocket set up")
+  }
+
+  async webSocketIsReady() {
+    await new Promise(
+      function(resolve, reject) {
+        this.socket.onopen = _ => resolve()
+      }.bind(this)
+    )
   }
 
   /**
