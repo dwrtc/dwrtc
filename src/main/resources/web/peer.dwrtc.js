@@ -1,23 +1,12 @@
 "use strict"
 
-const wsProtocol = location.protocol === "https:" ? "wss" : "ws" // in a perfect world, it's always wss
-const webSocketUrl = `${wsProtocol}://${location.host}/ws`
+import { show } from "./peer.utils"
 
-const elements = getElementsArrayById([
-  "connectNormal",
-  "otherPeerId",
-  "connectToSession",
-  "connectToSessionForm",
-  "input",
-  "output",
-  "idMessage",
-  "idValue",
-  "idCopy",
-  "yourVideo",
-  "otherVideo",
-  "errorOverlay",
-  "errorMessage"
-])
+const showError = (error, element) => {
+  element.hidden = false
+  element.classList.add("fade-in")
+  element.textContent = error
+}
 
 class SignalingMessage {
   constructor(recipientSessionId, messageBody) {
@@ -26,87 +15,27 @@ class SignalingMessage {
   }
 }
 
-const getElementsArrayById = ids => {
-  const elements = []
-  ids.forEach(e => (elements[e] = document.getElementById(e)))
-  return elements
-}
-
-/**
- * Onload. Setup the page interactions
- */
-window.onload = () => {
-  elements["connectNormal"].onclick = event => {
-    event.preventDefault()
-    startDwrtc(false)
-    hideIdMessage()
-  }
-  elements["connectToSession"].onclick = event => {
-    if (elements["connectToSessionForm"].checkValidity()) {
-      // Allow HTML5 form validation to take place
-      event.preventDefault()
-      startDwrtc(true, elements["otherPeerId"].value)
-      hideIdMessage()
-    }
-  }
-  elements["idCopy"].onclick = copyIdToClipboard
-  enableInput()
-}
-
-const showOutput = () => {
-  elements["output"].hidden = false
-  // if the css is "display: grid" initially, this overrides the hidden attribute
-  // therefore, we have to unhide it and add the proper class
-  elements["output"].classList.add("grid")
-}
-
-const hideIdMessage = () => {
-  elements["idMessage"].hidden = true
-}
-
-const showIdMessage = () => {
-  elements["idMessage"].hidden = false
-}
-
-const showOtherVideo = () => {
-  elements["otherVideo"].hidden = false
-  hideIdMessage()
-}
-
-const copyIdToClipboard = event => {
-  event.preventDefault()
-  elements["idValue"].select()
-  document.execCommand("copy")
-  elements["idCopy"].textContent = "Copied!"
-}
-
-const enableInput = () => (elements["input"].hidden = false)
-
-const disableInput = () => (elements["input"].hidden = true)
-
-const showError = error => {
-  elements["errorOverlay"].hidden = false
-  elements["errorOverlay"].classList.add("fade-in")
-  elements["errorMessage"].textContent = error
-}
-
-/**
- * Called when the user is ready. Sets up DWRTC.
- */
-async function startDwrtc(initiator, initialPeerId) {
-  console.log("Start DWRTC")
-  disableInput()
-  showOutput()
-  const dwrtc = new DWRTC(initiator, initialPeerId)
-  await dwrtc.setup()
-}
-
-class DWRTC {
-  constructor(isInitiator, initialPeerId) {
+export class DWRTC {
+  constructor(
+    isInitiator,
+    initialPeerId,
+    webSocketUrl,
+    videoElement,
+    idValueElement,
+    idMessageElement,
+    errorOverlayElement
+  ) {
     this.isInitiator = isInitiator
     if (this.isInitiator) {
       this.otherPeerId = initialPeerId
     }
+
+    this.webSocketUrl = webSocketUrl
+    this.videoElement = videoElement
+    this.idValueElement = idValueElement
+    this.idMessageElement = idMessageElement
+    this.errorOverlayElement = errorOverlayElement
+
     console.log(
       `Started DWRTC with isInitiator: ${isInitiator}, initialPeerId: ${initialPeerId}`
     )
@@ -128,8 +57,8 @@ class DWRTC {
     let stream
     try {
       stream = navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
+        video: video,
+        audio: audio
       })
     } catch (error) {
       throw error
@@ -143,9 +72,9 @@ class DWRTC {
   async startSimplePeer() {
     const stream = await this.getStream()
 
-    elements["yourVideo"].srcObject = stream
-    elements["yourVideo"].play()
-    elements["yourVideo"].muted = true
+    this.videoElement.srcObject = stream
+    this.videoElement.play()
+    this.videoElement.muted = true
     this.peer = new window.SimplePeer({
       initiator: this.isInitiator,
       stream: stream
@@ -163,10 +92,10 @@ class DWRTC {
     this.peer.on("stream", stream => {
       console.log("Got video stream!")
       showOtherVideo()
-      elements["otherVideo"].srcObject = stream
-      elements["otherVideo"].play()
+      this.videoElement.srcObject = stream
+      this.videoElement.play()
     })
-    showIdMessage()
+    show(this.idMessageElement)
 
     // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
     // "It's possible for the returned promise to neither resolve nor reject,
@@ -176,7 +105,7 @@ class DWRTC {
 
   /** Initialize the websocket completely */
   async setupSocket() {
-    this.socket = new WebSocket(webSocketUrl)
+    this.socket = new WebSocket(this.webSocketUrl)
 
     this.socket.onmessage = event => this.handleWebSocketMessage(event)
 
@@ -185,13 +114,13 @@ class DWRTC {
         event.code
       })`
       console.error(message)
-      showError(message)
+      showError(message, this.errorOverlayElement)
     }
 
     this.socket.onerror = event => {
       const message = `Websocket errored: (${event})`
       console.error(message)
-      showError(message)
+      showError(message, this.errorOverlayElement)
     }
 
     await this.webSocketIsReady()
@@ -239,7 +168,7 @@ class DWRTC {
   handleWebSocketIdMessage(message) {
     const id = message.id
     console.debug(`ID: ${id}`)
-    elements["idValue"].value = id
+    this.idValueElement.value = id
   }
 
   /**
@@ -252,7 +181,7 @@ class DWRTC {
     console.error(error)
     const errorSuffix =
       "Kindly reload the page and try again with another input"
-    showError(`${error}. ${errorSuffix}.`)
+    showError(`${error}. ${errorSuffix}.`, this.errorOverlayElement)
   }
 
   /**
