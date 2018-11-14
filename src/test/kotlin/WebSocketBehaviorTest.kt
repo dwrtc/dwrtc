@@ -1,7 +1,7 @@
 package test
 
+import ch.hsr.dsl.dwrtc.signaling.ClientMessage
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.util.findFreePort
 import ch.hsr.dsl.dwrtc.util.jsonTo
 import ch.hsr.dsl.dwrtc.util.toJson
@@ -39,12 +39,12 @@ class WebSocketBehaviorTest : WordSpec(), TestListener {
             val clientTwoIdMessage = clientTwo.received().take(1).toList().first().bodyString()
             val clientTwoId = jsonTo<WebSocketIdMessage>(clientTwoIdMessage).id
 
-            val message = SignalingMessage(null, clientOneId, "Hello World")
+            val message = ClientMessage("SignalingMessage", null, clientOneId, "Hello World")
             clientTwo.send(WsMessage(toJson(message)))
             val receivedMessageString = clientOne.received().take(1).toList().first().bodyString()
-            val receivedMessage = jsonTo<SignalingMessage>(receivedMessageString)
+            val receivedMessage = jsonTo<ClientMessage>(receivedMessageString)
 
-            val invalidIdMessage = SignalingMessage(null, "NOTFOUND", "Hello World")
+            val invalidIdMessage = ClientMessage("SignalingMessage", null, "NOTFOUND", "Hello World")
             clientTwo.send(WsMessage(toJson(invalidIdMessage)))
             val invalidIdReply = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
 

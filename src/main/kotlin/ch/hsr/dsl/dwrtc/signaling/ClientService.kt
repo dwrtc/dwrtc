@@ -44,7 +44,7 @@ interface IClientService {
      * @param sessionId the session ID this listener is added for
      * @param emitter the callable to be called when a message is received
      */
-    fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit)
+    fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, ClientMessage) -> Unit)
 }
 
 /**
@@ -62,7 +62,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
     /** The TomP2P peer */
     internal var peer: PeerDHT
     /** Map of user's session ID to their message handlers. See [InternalClient.onReceiveMessage] */
-    private val emitterMap = ConcurrentHashMap<String, (ExternalClient, SignalingMessage) -> Unit>()
+    private val emitterMap = ConcurrentHashMap<String, (ExternalClient, ClientMessage) -> Unit>()
 
     init {
         this.peer = buildNewPeer(peerId, peerPort ?: findFreePort())
@@ -136,7 +136,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         return future
     }
 
-    override fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit) {
+    override fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, ClientMessage) -> Unit) {
         emitterMap[sessionId] = emitter
     }
 
@@ -178,12 +178,12 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
     /** Setup the dispatcher to send the incoming messages to the correct user */
     private fun setupDirectMessageListener() {
         /** Dispatch the actual message */
-        fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {
-            val recipientSessionId = signalingMessage.recipientSessionId!!
-            val senderSessionId = signalingMessage.senderSessionId!!
+        fun dispatchMessage(clientMessage: ClientMessage, senderPeerAddress: PeerAddress) {
+            val recipientSessionId = clientMessage.recipientSessionId!!
+            val senderSessionId = clientMessage.senderSessionId!!
             emitterMap[recipientSessionId]?.let {
                 logger.info { "message accepted, found emitter for $recipientSessionId" }
-                it(ExternalClient(senderSessionId, senderPeerAddress, peer), signalingMessage)
+                it(ExternalClient(senderSessionId, senderPeerAddress, peer), clientMessage)
             } ?: run {
                 logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
             }
@@ -192,7 +192,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         /** Only dispatch a message if it's actually one of our own messages */
         fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
             logger.info { "got message $messageDto" }
-            return if (messageDto is SignalingMessage) {
+            return if (messageDto is ClientMessage) {
                 dispatchMessage(messageDto, senderPeerAddress)
                 messageDto
             } else {

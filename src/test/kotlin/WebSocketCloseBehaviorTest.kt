@@ -1,7 +1,7 @@
 package test
 
+import ch.hsr.dsl.dwrtc.signaling.ClientMessage
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.util.findFreePort
 import ch.hsr.dsl.dwrtc.util.jsonTo
 import ch.hsr.dsl.dwrtc.util.toJson
@@ -43,7 +43,7 @@ class WebSocketCloseBehaviorTest : WordSpec(), TestListener {
             val clientThreeIdMessage = clientThree.received().take(1).toList().first().bodyString()
             val clientThreeId = jsonTo<WebSocketIdMessage>(clientThreeIdMessage).id
 
-            val message = SignalingMessage(null, clientOneId, "Hello World")
+            val message = ClientMessage("SignalingMessage", null, clientOneId, "Hello World")
 
             clientOne.close()
             clientTwo.send(WsMessage(toJson(message)))  // re-send original message
@@ -54,10 +54,10 @@ class WebSocketCloseBehaviorTest : WordSpec(), TestListener {
             clientTwo.send(WsMessage(toJson(message)))  // re-send original message
             val secondTry = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
 
-            val stillWorkingMessage = SignalingMessage(null, clientThreeId, "Hello World")
+            val stillWorkingMessage = ClientMessage("SignalingMessage", null, clientThreeId, "Hello World")
             clientTwo.send(WsMessage(toJson(stillWorkingMessage)))
             val receivedMessageString = clientThree.received().take(1).toList().first().bodyString()
-            val receivedMessage = jsonTo<SignalingMessage>(receivedMessageString)
+            val receivedMessage = jsonTo<ClientMessage>(receivedMessageString)
 
 
 
