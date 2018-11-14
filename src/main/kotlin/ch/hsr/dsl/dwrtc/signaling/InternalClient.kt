@@ -13,14 +13,14 @@ interface IInternalClient {
      *
      * @return see [Future]
      */
-    fun sendMessage(messageBody: String, recipient: IExternalClient): Future
+    fun sendMessage(type: String, messageBody: String, recipient: IExternalClient): Future
 
     /**
      * Register a listener that handles messages for this user
      *
      * @param emitter a callable that receives the sender and the actual message
      */
-    fun onReceiveMessage(emitter: (IExternalClient, SignalingMessage) -> Unit)
+    fun onReceiveMessage(emitter: (IExternalClient, ClientMessage) -> Unit)
 
     /** the user's session ID */
     val sessionId: String
@@ -42,17 +42,17 @@ class InternalClient(
     /** Logging companion */
     companion object : KLogging()
 
-    override fun sendMessage(messageBody: String, recipient: IExternalClient): Future {
+    override fun sendMessage(type: String, messageBody: String, recipient: IExternalClient): Future {
         logger.info { "send message $messageBody from ${peer.peerAddress()} to $recipient" }
 
-        val result = recipient.sendMessage(messageBody, this.sessionId)
+        val result = recipient.sendMessage(type, messageBody, this.sessionId)
         logger.info { "sent message $messageBody from ${peer.peerAddress()} to $recipient" }
         result.onFailure { logger.info { "send message failed: $it" } }
         result.onSuccess { logger.info { "message sent successfully" } }
         return result
     }
 
-    override fun onReceiveMessage(emitter: (IExternalClient, SignalingMessage) -> Unit) {
+    override fun onReceiveMessage(emitter: (IExternalClient, ClientMessage) -> Unit) {
         logger.info { "register emitter for message receiving (own peer address ${peer.peerAddress()})" }
 
         clientService.addDirectMessageListener(sessionId, emitter)
