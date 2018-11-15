@@ -9,6 +9,7 @@ import net.tomp2p.dht.PeerDHT
 import net.tomp2p.futures.BaseFuture
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
+import java.net.UnknownHostException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -94,12 +95,12 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
     constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this(peerPort) {
         if (bootstrapIp != null && bootstrapPort != null) {
             logger.info { "bootstrapping with $bootstrapIp:$bootstrapPort" }
-            bootstrapPeer(
-                PeerConnectionDetails(
-                    bootstrapIp,
-                    bootstrapPort
-                )
-            )
+            try {
+                val connectionDetails = PeerConnectionDetails(bootstrapIp, bootstrapPort)
+                bootstrapPeer(connectionDetails)
+            } catch (e: UnknownHostException) {
+                logger.error { "Bootstrap FAILED. Peer could not be resolved: $e" }
+            }
         }
     }
 
@@ -146,15 +147,18 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param peerAddress the peer to bootstrap to
      */
     private fun bootstrapPeer(peerAddress: PeerAddress) {
+        logger.info { "own id ${peer.peerAddress().peerId()}" }
+        logger.info { "other id ${peerAddress.peerId()}" }
         val future: BaseFuture? = peer.peer()
-            .bootstrap()
-            .peerAddress(peerAddress)
-            .start().await()
+                .bootstrap()
+                .peerAddress(peerAddress)
+                .start()
         future?.onSuccess { logger.info { "bootstrapping successful" } }
         future?.onFailure {
             logger.info { "bootstrapping failed retrying" }
             bootstrapPeer(peerAddress)
         }
+        future?.awaitListeners()
     }
 
     /**
@@ -164,15 +168,16 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      */
     private fun bootstrapPeer(peerDetails: PeerConnectionDetails) {
         val future: BaseFuture? = peer.peer()
-            .bootstrap()
-            .inetAddress(peerDetails.ipAddress)
-            .ports(peerDetails.port)
-            .start().await()
+                .bootstrap()
+                .inetAddress(peerDetails.ipAddress)
+                .ports(peerDetails.port)
+                .start()
         future?.onSuccess { logger.info { "bootstrapping successful" } }
         future?.onFailure {
             logger.info { "bootstrapping failed retrying" }
             bootstrapPeer(peerDetails)
         }
+        future?.awaitListeners()
     }
 
     /** Setup the dispatcher to send the incoming messages to the correct user */
