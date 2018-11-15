@@ -1,4 +1,4 @@
-package ch.hsr.dsl.dwrtc.util
+package ch.hsr.dsl.dwrtc.util.config
 
 import com.natpryce.konfig.*
 
@@ -8,10 +8,8 @@ val PEER_PORT = Key("peer.port", intType)
 val WEBSERVER_IP = Key("http.ip", stringType)
 /** The port the Webserver runs on */
 val WEBSERVER_PORT = Key("http.port", intType)
-/** The IP to bootstrap to */
-val BOOTSTRAP_IP = Key("bootstrap.ip", stringType)
-/** The port to bootstrap to */
-val BOOTSTRAP_PORT = Key("bootstrap.port", intType)
+/** The list of peers to bootstrap to. Comma-separated list of "HOST:PORT" */
+val BOOTSTRAP_PEER = Key("bootstrap.peer", listType(stringType))
 
 /** The configuration object, defining the priorities in which configuration is read */
 val config = ConfigurationProperties.systemProperties() overriding

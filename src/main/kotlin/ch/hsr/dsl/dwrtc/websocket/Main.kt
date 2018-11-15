@@ -1,7 +1,7 @@
 package ch.hsr.dsl.dwrtc.websocket
 
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.util.*
+import ch.hsr.dsl.dwrtc.util.config.*
 import io.javalin.Javalin
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
@@ -21,7 +21,7 @@ fun main(args: Array<String>) {
             .start()
 
     val clientService =
-            ClientService(config.getOrNull(BOOTSTRAP_IP), config.getOrNull(BOOTSTRAP_PORT), config.getOrNull(PEER_PORT))
+            ClientService(config.getOrNull(BOOTSTRAP_PEER), config.getOrNull(PEER_PORT))
 
     WebSocketHandler(app, clientService)
 }

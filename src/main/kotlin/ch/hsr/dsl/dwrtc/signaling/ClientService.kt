@@ -1,6 +1,7 @@
 package ch.hsr.dsl.dwrtc.signaling
 
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
+import ch.hsr.dsl.dwrtc.util.config.extractPeerDetails
 import ch.hsr.dsl.dwrtc.util.findFreePort
 import ch.hsr.dsl.dwrtc.util.onFailure
 import ch.hsr.dsl.dwrtc.util.onSuccess
@@ -92,12 +93,12 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param bootstrapPort the peer's port to bootstrap with
      * @param peerPort the port this peer uses
      */
-    constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this(peerPort) {
-        if (bootstrapIp != null && bootstrapPort != null) {
-            logger.info { "bootstrapping with $bootstrapIp:$bootstrapPort" }
+    constructor(bootstrapPeers: List<String>?, peerPort: Int?) : this(peerPort) {
+        if (bootstrapPeers != null) {
+            logger.info { "bootstrapping with $bootstrapPeers" }
             try {
-                val connectionDetails = PeerConnectionDetails(bootstrapIp, bootstrapPort)
-                bootstrapPeer(connectionDetails)
+                val convertedPeers = extractPeerDetails(bootstrapPeers)
+                bootstrapPeers(convertedPeers)
             } catch (e: UnknownHostException) {
                 logger.error { "Bootstrap FAILED. Peer could not be resolved: $e" }
             }
@@ -164,20 +165,31 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
     /**
      * Bootstrap our peer to another peer
      *
-     * @param peerDetails the peer to bootstrap to
+     * @param peersDetails the peer to bootstrap to
      */
-    private fun bootstrapPeer(peerDetails: PeerConnectionDetails) {
-        val future: BaseFuture? = peer.peer()
-                .bootstrap()
-                .inetAddress(peerDetails.ipAddress)
-                .ports(peerDetails.port)
-                .start()
-        future?.onSuccess { logger.info { "bootstrapping successful" } }
-        future?.onFailure {
-            logger.info { "bootstrapping failed retrying" }
-            bootstrapPeer(peerDetails)
+    private fun bootstrapPeers(peersDetails: List<PeerConnectionDetails>) {
+        var success = false
+        for (peerDetail in peersDetails) {
+            logger.info { "bootstrapping with $peerDetail..." }
+            val future: BaseFuture? = peer.peer()
+                    .bootstrap()
+                    .inetAddress(peerDetail.ipAddress)
+                    .ports(peerDetail.port)
+                    .start()
+            future?.onSuccess {
+                logger.info { "bootstrapping $peerDetail successful" }
+                success = true
+            }
+            future?.onFailure {
+                logger.info { "bootstrapping $peerDetail failed" }
+            }
+            future?.awaitListeners()
+            if (success) break
         }
-        future?.awaitListeners()
+        if (!success) {
+            logger.info { "Retrying all" }
+            bootstrapPeers(peersDetails)
+        }
     }
 
     /** Setup the dispatcher to send the incoming messages to the correct user */
