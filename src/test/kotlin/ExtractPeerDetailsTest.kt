@@ -1,7 +1,7 @@
 package test
 
 import ch.hsr.dsl.dwrtc.signaling.PeerConnectionDetails
-import ch.hsr.dsl.dwrtc.util.config.extractPeerDetails
+import ch.hsr.dsl.dwrtc.signaling.extractPeerDetails
 import io.kotlintest.matchers.collections.shouldBeEmpty
 import io.kotlintest.matchers.collections.shouldContainExactly
 import io.kotlintest.specs.WordSpec

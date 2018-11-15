@@ -1,7 +1,6 @@
 package ch.hsr.dsl.dwrtc.signaling
 
 import ch.hsr.dsl.dwrtc.util.buildNewPeer
-import ch.hsr.dsl.dwrtc.util.config.extractPeerDetails
 import ch.hsr.dsl.dwrtc.util.findFreePort
 import ch.hsr.dsl.dwrtc.util.onFailure
 import ch.hsr.dsl.dwrtc.util.onSuccess
@@ -148,18 +147,23 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param peerAddress the peer to bootstrap to
      */
     private fun bootstrapPeer(peerAddress: PeerAddress) {
-        logger.info { "own id ${peer.peerAddress().peerId()}" }
-        logger.info { "other id ${peerAddress.peerId()}" }
-        val future: BaseFuture? = peer.peer()
-                .bootstrap()
-                .peerAddress(peerAddress)
-                .start()
-        future?.onSuccess { logger.info { "bootstrapping successful" } }
-        future?.onFailure {
-            logger.info { "bootstrapping failed retrying" }
-            bootstrapPeer(peerAddress)
+        var success = false
+        while (!success) {
+            logger.info { "own id ${peer.peerAddress().peerId()}" }
+            logger.info { "other id ${peerAddress.peerId()}" }
+            val future: BaseFuture? = peer.peer()
+                    .bootstrap()
+                    .peerAddress(peerAddress)
+                    .start()
+            future?.onSuccess {
+                logger.info { "bootstrapping successful" }
+                success = true
+            }
+            future?.onFailure {
+                logger.info { "bootstrapping failed retrying" }
+            }
+            future?.awaitListeners()
         }
-        future?.awaitListeners()
     }
 
     /**
@@ -169,7 +173,9 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      */
     private fun bootstrapPeers(peersDetails: List<PeerConnectionDetails>) {
         var success = false
-        for (peerDetail in peersDetails) {
+        var index = 0
+        while (!success) {
+            val peerDetail = peersDetails[index]
             logger.info { "bootstrapping with $peerDetail..." }
             val future: BaseFuture? = peer.peer()
                     .bootstrap()
@@ -184,11 +190,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
                 logger.info { "bootstrapping $peerDetail failed" }
             }
             future?.awaitListeners()
-            if (success) break
-        }
-        if (!success) {
-            logger.info { "Retrying all" }
-            bootstrapPeers(peersDetails)
+            index = (index + 1) % peersDetails.size
         }
     }
 
