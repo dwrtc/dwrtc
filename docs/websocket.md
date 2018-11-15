@@ -23,7 +23,8 @@ When connected to the WebSocket, an implementation can send or receive the follo
 
 ### Send
 
-* `SignalingMessage`. Send a black box signaling message to another peer.
+* `ClientMessage`. Send a black box signaling message to another peer.
+  * `type`: The message type. Has to be defined by the developer. E.g. "SignalingMessage" for WebRTC signaling messages and "CustomMessage" for custom messages.
   * `recipientSessionId: String`. The recipient's session ID. Used for routing.
   * `messageBody: String`. The free-form message body. To the transport layer, this is a black box.
   
@@ -37,8 +38,8 @@ All these incoming message types have to be handled. They are distinguishable by
 * `WebSocketErrorMessage`. Tells the implementation that something went wrong
   * `type: String`. Static value `WebSocketErrorMessage`
   * `error: String`. The error message
-* `SignalingMessage`. Incoming, signaling messages
-  * `type: String`. Static value `SignalingMessage`
+* `ClientMessage`. Incoming, signaling messages
+  * `type: String`. The message type as defined by the developer (see above)
   * `senderSessionId: String`. The sender' session ID. Can be used to reply to messages
   * `recipientSessionId: String`. The recipient's session ID. This should be the current session ID!
   * `messageBody: String`. The free-form message body

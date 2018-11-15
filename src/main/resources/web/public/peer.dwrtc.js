@@ -18,10 +18,11 @@ class EventDispatcher {
 }
 
 class SignalingMessage {
-  constructor(recipientSessionId, messageBody) {
-    this.recipientSessionId = recipientSessionId
-    this.messageBody = messageBody
-  }
+    constructor(recipientSessionId, messageBody) {
+        this.type = "SignalingMessage"
+        this.recipientSessionId = recipientSessionId
+        this.messageBody = messageBody
+    }
 }
 
 class DWRTC {
@@ -116,13 +117,13 @@ class DWRTC {
     console.debug("Websocket set up")
   }
 
-  async webSocketIsReady() {
-    await new Promise(
-      function(resolve, reject) {
-        this.socket.onopen = _ => resolve()
-      }.bind(this)
-    )
-  }
+    async webSocketIsReady() {
+        await new Promise(
+            function (resolve, reject) {
+                this.socket.onopen = _ => resolve()
+            }.bind(this)
+        )
+    }
 
   /**
    * Dispatch the incoming message
@@ -147,7 +148,6 @@ class DWRTC {
       default:
         console.error(`${debugMessage} UNKNOWN`)
     }
-  }
 
   /**
    * Handle an ID message

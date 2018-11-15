@@ -1,7 +1,7 @@
 package test
 
+import ch.hsr.dsl.dwrtc.signaling.ClientMessage
 import ch.hsr.dsl.dwrtc.signaling.ClientService
-import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.util.findFreePort
 import ch.hsr.dsl.dwrtc.util.jsonTo
 import ch.hsr.dsl.dwrtc.util.toJson
@@ -45,7 +45,7 @@ class WebSocketStressTest : WordSpec(), TestListener {
 
             for (i in 1..n) {
                 // we explicitly set the senderSessionId, so the list matches exactly
-                val message = SignalingMessage(clientTwoId, clientOneId, n.toString())
+                val message = ClientMessage("SignalingMessage", clientTwoId, clientOneId, n.toString())
                 val wsMessage = WsMessage(toJson(message))
                 sentMessages.add(wsMessage)
                 clientTwo.send(wsMessage)

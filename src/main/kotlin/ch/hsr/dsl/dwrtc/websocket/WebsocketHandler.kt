@@ -1,8 +1,8 @@
 package ch.hsr.dsl.dwrtc.websocket
 
+import ch.hsr.dsl.dwrtc.signaling.ClientMessage
 import ch.hsr.dsl.dwrtc.signaling.ClientService
 import ch.hsr.dsl.dwrtc.signaling.IInternalClient
-import ch.hsr.dsl.dwrtc.signaling.SignalingMessage
 import ch.hsr.dsl.dwrtc.util.jsonTo
 import ch.hsr.dsl.dwrtc.util.toJson
 import io.javalin.Javalin
@@ -71,13 +71,14 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
      * @param message the message content
      */
     private fun onReceiveMessageFromWebSocket(session: WsSession, message: String) {
-        val messageDto = jsonTo<SignalingMessage>(message)
+        val messageDto = jsonTo<ClientMessage>(message)
         messageDto.senderSessionId = session.id
 
         val future = signallingService.findClient(messageDto.recipientSessionId!!)
         future.onGet { recipient ->
             clients[session.id]?.let { it ->
                 val sendFuture = it.sendMessage(
+                        messageDto.type,
                         messageDto.messageBody,
                         recipient
                 )
@@ -116,7 +117,7 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
      * Sends the message to the recipient via WebSocket
      */
     @Synchronized
-    private fun onReceiveMessageFromSignaling(message: SignalingMessage) {
+    private fun onReceiveMessageFromSignaling(message: ClientMessage) {
         logger.info { "sending message $message" }
         sessions[message.recipientSessionId]?.let { it.send(toJson(message)) }
     }

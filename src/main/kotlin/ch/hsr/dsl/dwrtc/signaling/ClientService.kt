@@ -9,6 +9,7 @@ import net.tomp2p.dht.PeerDHT
 import net.tomp2p.futures.BaseFuture
 import net.tomp2p.peers.Number160
 import net.tomp2p.peers.PeerAddress
+import java.net.UnknownHostException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -44,7 +45,7 @@ interface IClientService {
      * @param sessionId the session ID this listener is added for
      * @param emitter the callable to be called when a message is received
      */
-    fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit)
+    fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, ClientMessage) -> Unit)
 }
 
 /**
@@ -62,7 +63,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
     /** The TomP2P peer */
     internal var peer: PeerDHT
     /** Map of user's session ID to their message handlers. See [InternalClient.onReceiveMessage] */
-    private val emitterMap = ConcurrentHashMap<String, (ExternalClient, SignalingMessage) -> Unit>()
+    private val emitterMap = ConcurrentHashMap<String, (ExternalClient, ClientMessage) -> Unit>()
 
     init {
         this.peer = buildNewPeer(peerId, peerPort ?: findFreePort())
@@ -91,15 +92,15 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param bootstrapPort the peer's port to bootstrap with
      * @param peerPort the port this peer uses
      */
-    constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this(peerPort) {
-        if (bootstrapIp != null && bootstrapPort != null) {
-            logger.info { "bootstrapping with $bootstrapIp:$bootstrapPort" }
-            bootstrapPeer(
-                PeerConnectionDetails(
-                    bootstrapIp,
-                    bootstrapPort
-                )
-            )
+    constructor(bootstrapPeers: List<String>?, peerPort: Int?) : this(peerPort) {
+        if (bootstrapPeers != null) {
+            logger.info { "bootstrapping with $bootstrapPeers" }
+            try {
+                val convertedPeers = extractPeerDetails(bootstrapPeers)
+                bootstrapPeers(convertedPeers)
+            } catch (e: UnknownHostException) {
+                logger.error { "Bootstrap FAILED. Peer could not be resolved: $e" }
+            }
         }
     }
 
@@ -136,7 +137,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         return future
     }
 
-    override fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, SignalingMessage) -> Unit) {
+    override fun addDirectMessageListener(sessionId: String, emitter: (IExternalClient, ClientMessage) -> Unit) {
         emitterMap[sessionId] = emitter
     }
 
@@ -146,44 +147,62 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param peerAddress the peer to bootstrap to
      */
     private fun bootstrapPeer(peerAddress: PeerAddress) {
-        val future: BaseFuture? = peer.peer()
-            .bootstrap()
-            .peerAddress(peerAddress)
-            .start().await()
-        future?.onSuccess { logger.info { "bootstrapping successful" } }
-        future?.onFailure {
-            logger.info { "bootstrapping failed retrying" }
-            bootstrapPeer(peerAddress)
+        var success = false
+        while (!success) {
+            logger.info { "own id ${peer.peerAddress().peerId()}" }
+            logger.info { "other id ${peerAddress.peerId()}" }
+            val future: BaseFuture? = peer.peer()
+                    .bootstrap()
+                    .peerAddress(peerAddress)
+                    .start()
+            future?.onSuccess {
+                logger.info { "bootstrapping successful" }
+                success = true
+            }
+            future?.onFailure {
+                logger.info { "bootstrapping failed retrying" }
+            }
+            future?.awaitListeners()
         }
     }
 
     /**
      * Bootstrap our peer to another peer
      *
-     * @param peerDetails the peer to bootstrap to
+     * @param peersDetails the peer to bootstrap to
      */
-    private fun bootstrapPeer(peerDetails: PeerConnectionDetails) {
-        val future: BaseFuture? = peer.peer()
-            .bootstrap()
-            .inetAddress(peerDetails.ipAddress)
-            .ports(peerDetails.port)
-            .start().await()
-        future?.onSuccess { logger.info { "bootstrapping successful" } }
-        future?.onFailure {
-            logger.info { "bootstrapping failed retrying" }
-            bootstrapPeer(peerDetails)
+    private fun bootstrapPeers(peersDetails: List<PeerConnectionDetails>) {
+        var success = false
+        var index = 0
+        while (!success) {
+            val peerDetail = peersDetails[index]
+            logger.info { "bootstrapping with $peerDetail..." }
+            val future: BaseFuture? = peer.peer()
+                    .bootstrap()
+                    .inetAddress(peerDetail.ipAddress)
+                    .ports(peerDetail.port)
+                    .start()
+            future?.onSuccess {
+                logger.info { "bootstrapping $peerDetail successful" }
+                success = true
+            }
+            future?.onFailure {
+                logger.info { "bootstrapping $peerDetail failed" }
+            }
+            future?.awaitListeners()
+            index = (index + 1) % peersDetails.size
         }
     }
 
     /** Setup the dispatcher to send the incoming messages to the correct user */
     private fun setupDirectMessageListener() {
         /** Dispatch the actual message */
-        fun dispatchMessage(signalingMessage: SignalingMessage, senderPeerAddress: PeerAddress) {
-            val recipientSessionId = signalingMessage.recipientSessionId!!
-            val senderSessionId = signalingMessage.senderSessionId!!
+        fun dispatchMessage(clientMessage: ClientMessage, senderPeerAddress: PeerAddress) {
+            val recipientSessionId = clientMessage.recipientSessionId!!
+            val senderSessionId = clientMessage.senderSessionId!!
             emitterMap[recipientSessionId]?.let {
                 logger.info { "message accepted, found emitter for $recipientSessionId" }
-                it(ExternalClient(senderSessionId, senderPeerAddress, peer), signalingMessage)
+                it(ExternalClient(senderSessionId, senderPeerAddress, peer), clientMessage)
             } ?: run {
                 logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
             }
@@ -192,7 +211,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         /** Only dispatch a message if it's actually one of our own messages */
         fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
             logger.info { "got message $messageDto" }
-            return if (messageDto is SignalingMessage) {
+            return if (messageDto is ClientMessage) {
                 dispatchMessage(messageDto, senderPeerAddress)
                 messageDto
             } else {

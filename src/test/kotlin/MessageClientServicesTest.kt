@@ -46,8 +46,9 @@ class MessageClientServicesTest : WordSpec(), TestListener {
 
                 var success = false
                 val messageFuture = clientFirst.sendMessage(
-                    MESSAGE_BODY,
-                    externalClient!!
+                        "SignalingMessage",
+                        MESSAGE_BODY,
+                        externalClient!!
                 )
                 messageFuture.onComplete { success = true }
                 messageFuture.awaitListeners()
@@ -57,7 +58,7 @@ class MessageClientServicesTest : WordSpec(), TestListener {
             "be able to receive a message" {
                 var message = ""
                 clientSecond.onReceiveMessage { _, messageDto -> message = messageDto.messageBody }
-                clientFirst.sendMessage(MESSAGE_BODY, externalClient!!).awaitListeners()
+                clientFirst.sendMessage("SignalingMessage", MESSAGE_BODY, externalClient!!).awaitListeners()
                 message.shouldBe(MESSAGE_BODY)
             }
         }

@@ -18,8 +18,8 @@ open class Message(val type: String) : Serializable
  *  @property recipientSessionId the recipient's session ID
  *  @property messageBody the message's (free-form) body
  */
-data class SignalingMessage(var senderSessionId: String?, var recipientSessionId: String?, val messageBody: String) :
-        Message("SignalingMessage") {
+class ClientMessage(type: String, var senderSessionId: String?, var recipientSessionId: String?, val messageBody: String) :
+        Message(type) {
     init {
         this.senderSessionId = senderSessionId?.trim()
         this.recipientSessionId = recipientSessionId?.trim()
