@@ -10,6 +10,8 @@ val WEBSERVER_IP = Key("http.ip", stringType)
 val WEBSERVER_PORT = Key("http.port", intType)
 /** The list of peers to bootstrap to. Comma-separated list of "HOST:PORT" */
 val BOOTSTRAP_PEER = Key("bootstrap.peer", listType(stringType))
+/** Build variable. Pack the resources in the JAR (otherwise, load from file system) */
+val PACKED_RESOURCES = Key("packed.resources", booleanType)
 
 /** The configuration object, defining the priorities in which configuration is read */
 val config = ConfigurationProperties.systemProperties() overriding
