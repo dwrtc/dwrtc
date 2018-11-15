@@ -1,7 +1,5 @@
 "use strict"
 
-import { show } from "./peer.utils"
-
 const showError = (error, element) => {
   element.hidden = false
   element.classList.add("fade-in")
@@ -15,7 +13,7 @@ class SignalingMessage {
   }
 }
 
-export class DWRTC {
+class DWRTC {
   constructor(
     isInitiator,
     initialPeerId,

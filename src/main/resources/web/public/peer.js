@@ -1,8 +1,5 @@
 "use strict"
 
-import { getElementsArrayById, hide, show } from "./peer.utils"
-import { DWRTC } from "./peer.dwrtc"
-
 const elements = getElementsArrayById([
   "connectNormal",
   "otherPeerId",
