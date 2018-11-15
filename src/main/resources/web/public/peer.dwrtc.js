@@ -1,9 +1,20 @@
 "use strict"
 
-const showError = (error, element) => {
-  element.hidden = false
-  element.classList.add("fade-in")
-  element.textContent = error
+class EventDispatcher {
+  constructor() {
+    this.events = []
+  }
+
+  on(event, callback) {
+    const handlers = this.events[event] || []
+    handlers.push(callback)
+    this.events[event] = handlers
+  }
+
+  trigger(event, data) {
+    const handlers = this.events[event] || []
+    handlers.forEach(handler => handler(data))
+  }
 }
 
 class SignalingMessage {
@@ -14,25 +25,11 @@ class SignalingMessage {
 }
 
 class DWRTC {
-  constructor(
-    isInitiator,
-    initialPeerId,
-    webSocketUrl,
-    videoElement,
-    idValueElement,
-    idMessageElement,
-    errorOverlayElement
-  ) {
+  constructor(isInitiator, initialPeerId, webSocketUrl) {
     this.isInitiator = isInitiator
-    if (this.isInitiator) {
-      this.otherPeerId = initialPeerId
-    }
-
+    if (this.isInitiator) this.otherPeerId = initialPeerId
     this.webSocketUrl = webSocketUrl
-    this.videoElement = videoElement
-    this.idValueElement = idValueElement
-    this.idMessageElement = idMessageElement
-    this.errorOverlayElement = errorOverlayElement
+    this.dispatcher = new EventDispatcher()
 
     console.log(
       `Started DWRTC with isInitiator: ${isInitiator}, initialPeerId: ${initialPeerId}`
@@ -70,9 +67,6 @@ class DWRTC {
   async startSimplePeer() {
     const stream = await this.getStream()
 
-    this.videoElement.srcObject = stream
-    this.videoElement.play()
-    this.videoElement.muted = true
     this.peer = new window.SimplePeer({
       initiator: this.isInitiator,
       stream: stream
@@ -87,13 +81,12 @@ class DWRTC {
       )
       this.socket.send(JSON.stringify(message))
     })
+
     this.peer.on("stream", stream => {
-      console.log("Got video stream!")
-      showOtherVideo()
-      this.videoElement.srcObject = stream
-      this.videoElement.play()
+      this.dispatcher.trigger("stream", stream)
     })
-    show(this.idMessageElement)
+
+    this.dispatcher.trigger("started", stream)
 
     // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
     // "It's possible for the returned promise to neither resolve nor reject,
@@ -111,14 +104,12 @@ class DWRTC {
       const message = `Websocket closed (Reason ${event.reason}, Code ${
         event.code
       })`
-      console.error(message)
-      showError(message, this.errorOverlayElement)
+      this.dispatcher.trigger("error", message)
     }
 
     this.socket.onerror = event => {
       const message = `Websocket errored: (${event})`
-      console.error(message)
-      showError(message, this.errorOverlayElement)
+      this.dispatcher.trigger("error", message)
     }
 
     await this.webSocketIsReady()
@@ -142,19 +133,19 @@ class DWRTC {
     let debugMessage = "New message, type: "
     switch (message.type) {
       case "WebSocketIdMessage":
-        console.debug(debugMessage + "WebSocketIdMessage")
+        console.debug(`${debugMessage} WebSocketIdMessage`)
         this.handleWebSocketIdMessage(message)
         break
       case "WebSocketErrorMessage":
-        console.debug(debugMessage + "WebSocketErrorMessage")
+        console.debug(`${debugMessage} WebSocketErrorMessage`)
         this.handleWebSocketErrorMessage(message)
         break
       case "SignalingMessage":
-        console.debug(debugMessage + "SignalingMessage")
+        console.debug(`${debugMessage} SignalingMessage`)
         this.handleWebSocketSignalingMessage(message)
         break
       default:
-        console.error(debugMessage + "UNKNOWN")
+        console.error(`${debugMessage} UNKNOWN`)
     }
   }
 
@@ -164,9 +155,7 @@ class DWRTC {
    * @param {String} message.id the new ID
    */
   handleWebSocketIdMessage(message) {
-    const id = message.id
-    console.debug(`ID: ${id}`)
-    this.idValueElement.value = id
+    this.dispatcher.trigger("idMessage", message)
   }
 
   /**
@@ -197,5 +186,9 @@ class DWRTC {
     const data = JSON.parse(message.messageBody)
     // Send received message to our peer
     this.peer.signal(data)
+  }
+
+  on(key, emitter) {
+    this.dispatcher.on(key, emitter)
   }
 }

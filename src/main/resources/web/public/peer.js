@@ -37,13 +37,6 @@ window.onload = () => {
   show(elements["input"])
 }
 
-const showOutput = () => {
-  show(elements["output"])
-  // if the css is "display: grid" initially, this overrides the hidden attribute
-  // therefore, we have to unhide it and add the proper class
-  elements["output"].classList.add("grid")
-}
-
 const copyIdToClipboard = event => {
   event.preventDefault()
   elements["idValue"].select()
@@ -60,15 +53,38 @@ async function startDwrtc(initiator, initialPeerId) {
 
   console.log("Start DWRTC")
   hide(elements["input"])
-  showOutput()
-  const dwrtc = new DWRTC(
-    initiator,
-    initialPeerId,
-    webSocketUrl,
-    elements["yourVideo"],
-    elements["idValue"],
-    elements["idMessage"],
-    elements["errorOverlay"]
-  )
+  show(elements["output"])
+  elements["output"].classList.add("grid")
+  const dwrtc = new DWRTC(initiator, initialPeerId, webSocketUrl)
+
+  dwrtc.on("started", stream => {
+    elements["yourVideo"].srcObject = stream
+    elements["yourVideo"].play()
+    elements["yourVideo"].muted = true
+    show(elements["idMessage"])
+  })
+
+  dwrtc.on("stream", stream => {
+    console.log("got  stream")
+    hide(elements["idMessage"])
+    elements["otherVideo"].srcObject = stream
+    elements["otherVideo"].play()
+    show(elements["otherVideo"])
+  })
+
+  dwrtc.on("idMessage", message => {
+    const id = message.id
+    console.debug(`ID: ${id}`)
+    elements["idValue"].value = id
+  })
+
+  dwrtc.on("error", message => {
+    console.error(message)
+
+    show(elements["errorOverlay"])
+    elements["errorOverlay"].classList.add("fade-in")
+    elements["errorOverlay"].textContent = message
+  })
+
   await dwrtc.setup()
 }
