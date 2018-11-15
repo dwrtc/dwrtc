@@ -146,7 +146,7 @@ class DWRTC {
         this.handleWebSocketSignalingMessage(message)
         break
       default:
-        console.error(`${debugMessage} UNKNOWN`)
+        console.error(`${debugMessage} UNKNOWN ${message.type}`)
     }
 
   /**
