@@ -1,4 +1,4 @@
-package ch.hsr.dsl.dwrtc.util.config
+package ch.hsr.dsl.dwrtc.util
 
 import com.natpryce.konfig.*
 
