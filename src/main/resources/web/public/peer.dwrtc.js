@@ -63,7 +63,7 @@ class DWRTC {
   }
 
   /**
-   * Initialize the peer with the information we have so far
+   * Initialize the peer
    */
   async startSimplePeer() {
     const stream = await this.getStream()
@@ -75,7 +75,7 @@ class DWRTC {
 
     this.peer.on("signal", data => {
       // Peer wants to send signaling data
-      console.debug(`Send Signal message: ${data}`)
+      console.debug(`Send Signal message: ${JSON.stringify(data)}`)
       const message = new SignalingMessage(
         this.otherPeerId,
         JSON.stringify(data)
@@ -146,7 +146,7 @@ class DWRTC {
         this.handleWebSocketSignalingMessage(message)
         break
       default:
-        console.error(`${debugMessage} UNKNOWN ${message.type}`)
+        console.error(`${debugMessage} UNKNOWN type (${message.type}): ${JSON.stringify(message)}`)
     }
   }
 
