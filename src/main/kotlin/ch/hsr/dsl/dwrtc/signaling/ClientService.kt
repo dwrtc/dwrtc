@@ -92,12 +92,12 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param bootstrapPort the peer's port to bootstrap with
      * @param peerPort the port this peer uses
      */
-    constructor(bootstrapIp: String?, bootstrapPort: Int?, peerPort: Int?) : this(peerPort) {
-        if (bootstrapIp != null && bootstrapPort != null) {
-            logger.info { "bootstrapping with $bootstrapIp:$bootstrapPort" }
+    constructor(bootstrapPeers: List<String>?, peerPort: Int?) : this(peerPort) {
+        if (bootstrapPeers != null) {
+            logger.info { "bootstrapping with $bootstrapPeers" }
             try {
-                val connectionDetails = PeerConnectionDetails(bootstrapIp, bootstrapPort)
-                bootstrapPeer(connectionDetails)
+                val convertedPeers = extractPeerDetails(bootstrapPeers)
+                bootstrapPeers(convertedPeers)
             } catch (e: UnknownHostException) {
                 logger.error { "Bootstrap FAILED. Peer could not be resolved: $e" }
             }
@@ -147,37 +147,51 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param peerAddress the peer to bootstrap to
      */
     private fun bootstrapPeer(peerAddress: PeerAddress) {
-        logger.info { "own id ${peer.peerAddress().peerId()}" }
-        logger.info { "other id ${peerAddress.peerId()}" }
-        val future: BaseFuture? = peer.peer()
-                .bootstrap()
-                .peerAddress(peerAddress)
-                .start()
-        future?.onSuccess { logger.info { "bootstrapping successful" } }
-        future?.onFailure {
-            logger.info { "bootstrapping failed retrying" }
-            bootstrapPeer(peerAddress)
+        var success = false
+        while (!success) {
+            logger.info { "own id ${peer.peerAddress().peerId()}" }
+            logger.info { "other id ${peerAddress.peerId()}" }
+            val future: BaseFuture? = peer.peer()
+                    .bootstrap()
+                    .peerAddress(peerAddress)
+                    .start()
+            future?.onSuccess {
+                logger.info { "bootstrapping successful" }
+                success = true
+            }
+            future?.onFailure {
+                logger.info { "bootstrapping failed retrying" }
+            }
+            future?.awaitListeners()
         }
-        future?.awaitListeners()
     }
 
     /**
      * Bootstrap our peer to another peer
      *
-     * @param peerDetails the peer to bootstrap to
+     * @param peersDetails the peer to bootstrap to
      */
-    private fun bootstrapPeer(peerDetails: PeerConnectionDetails) {
-        val future: BaseFuture? = peer.peer()
-                .bootstrap()
-                .inetAddress(peerDetails.ipAddress)
-                .ports(peerDetails.port)
-                .start()
-        future?.onSuccess { logger.info { "bootstrapping successful" } }
-        future?.onFailure {
-            logger.info { "bootstrapping failed retrying" }
-            bootstrapPeer(peerDetails)
+    private fun bootstrapPeers(peersDetails: List<PeerConnectionDetails>) {
+        var success = false
+        var index = 0
+        while (!success) {
+            val peerDetail = peersDetails[index]
+            logger.info { "bootstrapping with $peerDetail..." }
+            val future: BaseFuture? = peer.peer()
+                    .bootstrap()
+                    .inetAddress(peerDetail.ipAddress)
+                    .ports(peerDetail.port)
+                    .start()
+            future?.onSuccess {
+                logger.info { "bootstrapping $peerDetail successful" }
+                success = true
+            }
+            future?.onFailure {
+                logger.info { "bootstrapping $peerDetail failed" }
+            }
+            future?.awaitListeners()
+            index = (index + 1) % peersDetails.size
         }
-        future?.awaitListeners()
     }
 
     /** Setup the dispatcher to send the incoming messages to the correct user */

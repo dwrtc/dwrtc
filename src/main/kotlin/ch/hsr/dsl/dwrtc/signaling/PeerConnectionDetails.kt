@@ -14,3 +14,10 @@ data class PeerConnectionDetails(val ipAddressString: String, val port: Int) {
     /** Technical IP address. Converted from [ipAddressString]. */
     val ipAddress: InetAddress = InetAddress.getByName(ipAddressString)
 }
+
+fun extractPeerDetails(peers: List<String>): List<PeerConnectionDetails> {
+    return peers.map { it ->
+        val split = it.split(":")
+        PeerConnectionDetails(split.first(), split.last().toInt())
+    }
+}
