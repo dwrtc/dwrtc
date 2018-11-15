@@ -116,9 +116,10 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
      *
      * Sends the message to the recipient via WebSocket
      */
-    @Synchronized
     private fun onReceiveMessageFromSignaling(message: ClientMessage) {
         logger.info { "sending message $message" }
-        sessions[message.recipientSessionId]?.let { it.send(toJson(message)) }
+        sessions[message.recipientSessionId]?.let {
+            it.remote.sendStringByFuture(toJson(message))
+        }
     }
 }
