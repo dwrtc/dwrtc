@@ -29,7 +29,7 @@ fun main(args: Array<String>) {
     }.start()
 
     val clientService =
-            ClientService(config.getOrNull(BOOTSTRAP_PEER), ch.hsr.dsl.dwrtc.util.config.getOrNull(PEER_PORT))
+            ClientService(config.getOrNull(BOOTSTRAP_PEER), config.getOrNull(PEER_PORT))
 
     WebSocketHandler(app, clientService)
 }
