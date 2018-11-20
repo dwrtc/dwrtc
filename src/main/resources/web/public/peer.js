@@ -16,6 +16,12 @@ const elements = getElementsArrayById([
   "errorMessage"
 ])
 
+const showError = message => {
+  show(elements["errorOverlay"])
+  elements["errorOverlay"].classList.add("fade-in")
+  elements["errorOverlay"].textContent = message
+}
+
 /**
  * Onload. Setup the page interactions
  */
@@ -78,12 +84,17 @@ async function startDwrtc(initiator, initialPeerId) {
     elements["idValue"].value = id
   })
 
+  dwrtc.on("webSocketError", message => {
+    const error = message.error
+    console.error(error)
+    const errorSuffix =
+      "Kindly reload the page and try again with another input"
+    showError(`${error}. ${errorSuffix}.`)
+  })
+
   dwrtc.on("error", message => {
     console.error(message)
-
-    show(elements["errorOverlay"])
-    elements["errorOverlay"].classList.add("fade-in")
-    elements["errorOverlay"].textContent = message
+    showError(message)
   })
 
   await dwrtc.setup()

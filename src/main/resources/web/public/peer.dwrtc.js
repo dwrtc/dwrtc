@@ -38,6 +38,14 @@ class DWRTC {
   }
 
   /**
+   * Register on event
+   * Uses the EventDispatcher to handle events.
+   */
+  on(key, emitter) {
+    this.dispatcher.on(key, emitter)
+  }
+
+  /**
    * Sets the class up
    * This is a separate method to the constructor, since constructors are not allowed to be async
    */
@@ -49,12 +57,15 @@ class DWRTC {
   /**
    * Get video / audio stream
    */
-  getStream(video = true, audio = true) {
+  getStream(videoEnabled = true, audioEnabled = true) {
+    // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+    // "It's possible for the returned promise to neither resolve nor reject,
+    // as the user is not required to make a choice at all and may simply ignore the request."
     let stream
     try {
       stream = navigator.mediaDevices.getUserMedia({
-        video: video,
-        audio: audio
+        video: videoEnabled,
+        audio: audioEnabled
       })
     } catch (error) {
       throw error
@@ -89,9 +100,6 @@ class DWRTC {
 
     this.dispatcher.trigger("started", stream)
 
-    // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
-    // "It's possible for the returned promise to neither resolve nor reject,
-    // as the user is not required to make a choice at all and may simply ignore the request."
     console.debug("SimplePeer started")
   }
 
@@ -139,14 +147,18 @@ class DWRTC {
         break
       case "WebSocketErrorMessage":
         console.debug(`${debugMessage} WebSocketErrorMessage`)
-        this.handleWebSocketErrorMessage(message)
+        this.dispatcher.trigger("webSocketError", message)
         break
       case "SignalingMessage":
         console.debug(`${debugMessage} SignalingMessage`)
         this.handleWebSocketSignalingMessage(message)
         break
       default:
-        console.error(`${debugMessage} UNKNOWN type (${message.type}): ${JSON.stringify(message)}`)
+        console.error(
+          `${debugMessage} UNKNOWN type (${message.type}): ${JSON.stringify(
+            message
+          )}`
+        )
     }
   }
 
@@ -187,9 +199,5 @@ class DWRTC {
     const data = JSON.parse(message.messageBody)
     // Send received message to our peer
     this.peer.signal(data)
-  }
-
-  on(key, emitter) {
-    this.dispatcher.on(key, emitter)
   }
 }
