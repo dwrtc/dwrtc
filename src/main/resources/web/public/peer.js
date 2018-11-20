@@ -65,8 +65,8 @@ async function startDwrtc(initiator, initialPeerId) {
 
   dwrtc.on("started", stream => {
     elements["yourVideo"].srcObject = stream
-    elements["yourVideo"].play()
     elements["yourVideo"].muted = true
+    elements["yourVideo"].play()
     show(elements["idMessage"])
   })
 
