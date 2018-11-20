@@ -48,4 +48,8 @@ class ExternalClient(override val sessionId: String, val peerAddress: PeerAddres
         result = 31 * result + peerAddress.peerId().hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "External Client (ID: $sessionId; Peer Address: $peerAddress)"
+    }
 }
