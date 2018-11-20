@@ -43,10 +43,10 @@ class InternalClient(
     companion object : KLogging()
 
     override fun sendMessage(type: String, messageBody: String, recipient: IExternalClient): Future {
-        logger.info { "send message $messageBody from ${peer.peerAddress()} to $recipient" }
+        logger.info { "send message $messageBody from $this to $recipient" }
 
         val result = recipient.sendMessage(type, messageBody, this.sessionId)
-        logger.info { "sent message $messageBody from ${peer.peerAddress()} to $recipient" }
+        logger.info { "sent message $messageBody from $this to $recipient" }
         result.onFailure { logger.info { "send message failed: $it" } }
         result.onSuccess { logger.info { "message sent successfully" } }
         return result
@@ -74,6 +74,10 @@ class InternalClient(
         var result = peer.peerID().hashCode()
         result = 31 * result + sessionId.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "InternalClient Client (ID: $sessionId; Peer Address: ${peer.peerAddress()})"
     }
 }
  
