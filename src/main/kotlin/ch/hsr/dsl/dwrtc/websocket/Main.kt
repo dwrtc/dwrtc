@@ -1,6 +1,7 @@
 package ch.hsr.dsl.dwrtc.websocket
 
 import ch.hsr.dsl.dwrtc.signaling.ClientService
+import ch.hsr.dsl.dwrtc.signaling.extractPeerDetails
 import ch.hsr.dsl.dwrtc.util.*
 import io.javalin.Javalin
 import io.javalin.staticfiles.Location
@@ -31,7 +32,10 @@ fun main(args: Array<String>) {
     }.start()
 
     val clientService =
-            ClientService(config.getOrNull(BOOTSTRAP_PEER), config.getOrNull(PEER_PORT))
+            ClientService(
+                    extractPeerDetails(config.getOrNull(BOOTSTRAP_PEER)),
+                    config.getOrNull(PEER_PORT)
+            )
 
     WebSocketHandler(app, clientService)
 }
