@@ -10,6 +10,9 @@ import java.net.UnknownHostException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.concurrent.thread
+
+const val SECOND = 1_000.toLong()
 
 /** Connection to the P2P network */
 interface IClientService {
@@ -184,7 +187,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
                 success = true
             }
             future?.onFailure {
-                logger.info { "bootstrapping failed retrying" }
+                logger.info { "bootstrapping failed: $it retrying" }
             }
             future?.awaitListeners()
         }
@@ -195,26 +198,28 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      *
      * @param peersDetails the peer to bootstrap to
      */
-    private fun bootstrapPeers(peersDetails: List<PeerConnectionDetails>) {
-        var success = false
-        var index = 0
-        while (!success) {
-            val peerDetail = peersDetails[index]
-            logger.info { "bootstrapping with $peerDetail..." }
-            val future: BaseFuture? = peer.peer()
+    private fun bootstrapPeers(peersDetails: List<PeerConnectionDetails>) = peersDetails.forEach { details ->
+        thread(isDaemon = true) {
+            var sleepTime = 0.toLong()
+
+            while (true) {
+                logger.info { "bootstrapping with $details on thread ${Thread.currentThread()}" }
+                val future: BaseFuture? = peer.peer()
                     .bootstrap()
-                    .inetAddress(peerDetail.ipAddress)
-                    .ports(peerDetail.port)
+                    .inetAddress(details.ipAddress)
+                    .ports(details.port)
                     .start()
-            future?.onSuccess {
-                logger.info { "bootstrapping $peerDetail successful" }
-                success = true
+                future?.onSuccess {
+                    logger.info { "bootstrapping with $details on thread ${Thread.currentThread()} successful" }
+                    sleepTime = 30 * SECOND
+                }
+                future?.onFailure {
+                    logger.info { "bootstrapping with $details on thread ${Thread.currentThread()} failed: $it" }
+                    sleepTime = 10 * SECOND
+                }
+                future?.awaitListeners()
+                Thread.sleep(sleepTime)
             }
-            future?.onFailure {
-                logger.info { "bootstrapping $peerDetail failed" }
-            }
-            future?.awaitListeners()
-            index = (index + 1) % peersDetails.size
         }
     }
 
