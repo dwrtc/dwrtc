@@ -175,7 +175,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param peersDetails the peer to bootstrap to
      */
     private fun bootstrapPeers(peersDetails: List<PeerConnectionDetails>) = peersDetails.forEach { details ->
-        thread(true) {
+        thread(isDaemon = true) {
             var sleepTime = 0.toLong()
 
             while (true) {
