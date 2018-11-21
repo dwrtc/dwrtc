@@ -69,7 +69,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
     /** Map of user's session ID to their message handlers. See [InternalClient.onReceiveMessage] */
     private val emitterMap = ConcurrentHashMap<String, (ExternalClient, ClientMessage) -> Unit>()
     /** Peers used for bootstrapping */
-    private var bootstrapPeers: List<PeerConnectionDetails>? = null
+    private var bootstrapPeers: List<PeerConnectionDetails> = mutableListOf()
 
     init {
         this.peer = buildNewPeer(peerId, peerPort ?: findFreePort())
@@ -115,16 +115,16 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         logger.info { "add client $sessionId" }
         logger.info { "own peer: ${peer.peerAddress()} " }
 
-        val peerAddresses = if (bootstrapPeers == null) {
-            logger.info { "no bootstrap peers. Using peer.peerAddress" }
-            listOf<PeerAddress>(peer.peerAddress())
-        } else {
-            bootstrapPeers!!.map {
-                logger.info { "gathering IP from $it" }
-                peer.peer().discover().inetAddress(it.ipAddress).ports(it.port).start()
-            }.map { it.await() }
-                    .filter { it.isSuccess }
-                    .map { it.peerAddress() }
+        val peerAddresses = bootstrapPeers.map {
+            logger.info { "gathering IP from $it" }
+            peer.peer().discover().inetAddress(it.ipAddress).ports(it.port).start()
+        }.map { it.await() }
+                .filter { it.isSuccess }
+                .map { it.peerAddress() }.toMutableList()
+
+        if (peerAddresses.isEmpty()) {
+            logger.info { "no responses from peers, adding peer.peerAddress" }
+            peerAddresses.add(peer.peerAddress())
         }
 
         logger.info { "gathered peer addresses: $peerAddresses" }
