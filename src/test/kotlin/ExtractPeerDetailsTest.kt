@@ -15,6 +15,12 @@ class ExtractionTest : WordSpec() {
                 extractPeerDetails.shouldBeEmpty()
             }
         }
+        "a null list" should {
+            val extractPeerDetails = extractPeerDetails(null)
+            "yield an empty peer list" {
+                extractPeerDetails.shouldBeEmpty()
+            }
+        }
         "a string list with one elements" should {
             val extractPeerDetails = extractPeerDetails(listOf("127.0.0.1:5000"))
             "yield exactly one result" {

@@ -1,6 +1,9 @@
 package ch.hsr.dsl.dwrtc.signaling
 
-import ch.hsr.dsl.dwrtc.util.*
+import ch.hsr.dsl.dwrtc.util.buildNewPeer
+import ch.hsr.dsl.dwrtc.util.findFreePort
+import ch.hsr.dsl.dwrtc.util.onFailure
+import ch.hsr.dsl.dwrtc.util.onSuccess
 import mu.KLogging
 import net.tomp2p.dht.PeerDHT
 import net.tomp2p.futures.BaseFuture
@@ -65,6 +68,8 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
     internal var peer: PeerDHT
     /** Map of user's session ID to their message handlers. See [InternalClient.onReceiveMessage] */
     private val emitterMap = ConcurrentHashMap<String, (ExternalClient, ClientMessage) -> Unit>()
+    /** Peers used for bootstrapping */
+    private var bootstrapPeers: List<PeerConnectionDetails>? = null
 
     init {
         this.peer = buildNewPeer(peerId, peerPort ?: findFreePort())
@@ -84,6 +89,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      */
     constructor(bootstrapPeerAddress: PeerAddress, peerPort: Int? = findFreePort()) : this(peerPort) {
         logger.info { "bootstrapping with address:$bootstrapPeerAddress" }
+        this.bootstrapPeers = listOf(PeerConnectionDetails(bootstrapPeerAddress.inetAddress(), bootstrapPeerAddress.tcpPort()))
         bootstrapPeer(bootstrapPeerAddress)
     }
 
@@ -93,12 +99,12 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
      * @param bootstrapPort the peer's port to bootstrap with
      * @param peerPort the port this peer uses
      */
-    constructor(bootstrapPeers: List<String>?, peerPort: Int?) : this(peerPort) {
-        if (bootstrapPeers != null) {
+    constructor(bootstrapPeers: List<PeerConnectionDetails>, peerPort: Int?) : this(peerPort) {
+        this.bootstrapPeers = bootstrapPeers
+        if (bootstrapPeers.isNotEmpty()) {
             logger.info { "bootstrapping with $bootstrapPeers" }
             try {
-                val convertedPeers = extractPeerDetails(bootstrapPeers)
-                bootstrapPeers(convertedPeers)
+                bootstrapPeers(bootstrapPeers)
             } catch (e: UnknownHostException) {
                 logger.error { "Bootstrap FAILED. Peer could not be resolved: $e" }
             }
@@ -109,15 +115,17 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         logger.info { "add client $sessionId" }
         logger.info { "own peer: ${peer.peerAddress()} " }
 
-        val peerDetails = extractPeerDetails(config[BOOTSTRAP_PEER])
-        val peerAddresses = peerDetails
-                .map {
-                    logger.info { "gathering IP from $it" }
-                    peer.peer().discover().inetAddress(it.ipAddress).ports(it.port).start()
-                }
-                .map { it.await() }
-                .filter { it.isSuccess }
-                .map { it.peerAddress() }
+        val peerAddresses = if (bootstrapPeers == null) {
+            logger.info { "no bootstrap peers. Using peer.peerAddress" }
+            listOf<PeerAddress>(peer.peerAddress())
+        } else {
+            bootstrapPeers!!.map {
+                logger.info { "gathering IP from $it" }
+                peer.peer().discover().inetAddress(it.ipAddress).ports(it.port).start()
+            }.map { it.await() }
+                    .filter { it.isSuccess }
+                    .map { it.peerAddress() }
+        }
 
         logger.info { "gathered peer addresses: $peerAddresses" }
 
@@ -140,21 +148,26 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
 
         val dhtFuture = peer.get(Number160.createHash(sessionId)).start()
         val future = GetCustomFuture<IExternalClient, List<PeerAddress>>(dhtFuture) { peerAddresses ->
-            val concurrentList = ConcurrentLinkedQueue<PeerAddress>()
-            peerAddresses
-                    .map {
-                        logger.info { "Pinging $it to see if it responds" }
-                        peer.peer().ping().peerAddress(it).start()
-                    }.map {
-                        it.onSuccess { concurrentList.add(it.remotePeer()) }
-                        it
-                    }
-                    .map { it.awaitListeners() }
+            val foundPeerAddress: PeerAddress = if (peerAddresses.contains(peer.peerAddress())) {
+                logger.info { "skipping pinging since this peer is responsible" }
+                peer.peerAddress()
+            } else {
+                val concurrentList = ConcurrentLinkedQueue<PeerAddress>()
 
-            val chosenAddress = concurrentList.first()
-            logger.info { "First responding peer: $chosenAddress" }
+                peerAddresses.map {
+                    logger.info { "Pinging $it to see if it responds" }
+                    peer.peer().ping().peerAddress(it).start()
+                }.map {
+                    it.onSuccess { concurrentList.add(it.remotePeer()) }
+                    it
+                }.map { it.awaitListeners() }
 
-            ExternalClient(sessionId, chosenAddress, peer)
+                concurrentList.first()
+            }
+
+            logger.info { "First responding peer: $foundPeerAddress" }
+
+            ExternalClient(sessionId, foundPeerAddress, peer)
         }
 
         future.onFailure { logger.info { "find client with $sessionId failed completely" } }
@@ -169,7 +182,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
     }
 
     /**
-     * Bootstrap our peer to another peer
+     * Bootstrap our peer to another peer. Only used for testing!
      *
      * @param peerAddress the peer to bootstrap to
      */
@@ -205,10 +218,10 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
             while (true) {
                 logger.info { "bootstrapping with $details on thread ${Thread.currentThread()}" }
                 val future: BaseFuture? = peer.peer()
-                    .bootstrap()
-                    .inetAddress(details.ipAddress)
-                    .ports(details.port)
-                    .start()
+                        .bootstrap()
+                        .inetAddress(details.ipAddress)
+                        .ports(details.port)
+                        .start()
                 future?.onSuccess {
                     logger.info { "bootstrapping with $details on thread ${Thread.currentThread()} successful" }
                     sleepTime = 30 * SECOND

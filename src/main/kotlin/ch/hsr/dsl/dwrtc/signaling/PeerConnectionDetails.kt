@@ -7,15 +7,20 @@ import java.net.InetAddress
  *
  * Similar to TomP2P's `PeerAddress`, but can be entered by a user.
  *
- * @property ipAddressString the IP address
+ * @property ipAddress IP address
  * @property port the port
  */
-data class PeerConnectionDetails(val ipAddressString: String, val port: Int) {
-    /** Technical IP address. Converted from [ipAddressString]. */
-    val ipAddress: InetAddress = InetAddress.getByName(ipAddressString)
+data class PeerConnectionDetails(val ipAddress: InetAddress, val port: Int) {
+    /**
+     * Second constructor, taking a IP address string
+     *
+     * @property ipAddressString IP address as a string
+     */
+    constructor(ipAddressString: String, port: Int) : this(InetAddress.getByName(ipAddressString), port)
 }
 
-fun extractPeerDetails(peers: List<String>): List<PeerConnectionDetails> {
+fun extractPeerDetails(peers: List<String>?): List<PeerConnectionDetails> {
+    if (peers == null) return emptyList()
     return peers.map { it ->
         val split = it.split(":")
         PeerConnectionDetails(split.first(), split.last().toInt())
