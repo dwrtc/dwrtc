@@ -152,17 +152,17 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
                 logger.info { "skipping pinging since this peer is responsible" }
                 peer.peerAddress()
             } else {
-                val concurrentList = ConcurrentLinkedQueue<PeerAddress>()
+                val confirmedPeerAddresses = ConcurrentLinkedQueue<PeerAddress>()
 
                 peerAddresses.map {
                     logger.info { "Pinging $it to see if it responds" }
                     peer.peer().ping().peerAddress(it).start()
                 }.map {
-                    it.onSuccess { concurrentList.add(it.remotePeer()) }
+                    it.onSuccess { confirmedPeerAddresses.add(it.remotePeer()) }
                     it
                 }.map { it.awaitListeners() }
 
-                concurrentList.first()
+                confirmedPeerAddresses.first()
             }
 
             logger.info { "First responding peer: $foundPeerAddress" }
