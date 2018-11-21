@@ -31,7 +31,7 @@ Options are loaded using [Konfig](https://github.com/npryce/konfig). The priorit
 2. Environment Variables overrides
 3. Property file `defaults.properties`
 
-Konfig supports two syntaxes. "dot"-syntax (`http.port`) for Command Line and Property File, and "underscore"-syntax for Environment variables. The two options are shown below.
+Use the "dot"-syntax (`http.port`) for command line and property file, and "underscore"-syntax for environment variables (`HTTP_PORT`).
 
 The options are:
 
