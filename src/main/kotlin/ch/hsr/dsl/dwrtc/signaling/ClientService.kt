@@ -114,7 +114,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         logger.info { "add client $sessionId" }
         logger.info { "own peer: ${peer.peerAddress()} " }
 
-        // Ask all bootstrap servers how they see us.
+        // Ask all bootstrap servers how they see this peer
         // The first response is used
         // If no response is received, the peer's peer address is used
         val peerAddress = bootstrapPeers.map {
