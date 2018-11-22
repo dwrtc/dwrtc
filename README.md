@@ -38,7 +38,7 @@ The options are:
 * Peer Port (Int): `peer.port`/`PEER_PORT`: port the TomP2P peer runs on
 * Webserver IP (String): `http.ip`/`HTTP_IP`: the IP the web server binds to (e.g. "127.0.0.1", "localhost", "0.0.0.0")
 * Webserver Port (Int): `http.port`/`HTTP_PORT`: the port the web server binds to
-* Bootstrap Peer (comma-separated list of `HOST:PORT` pairs): the list of peers to bootstrap to (e.g. "1.1.1.1:4000,2.2.2.2:3000")
+* Bootstrap Peer (comma-separated list of `HOST:PORT` pairs): `bootstrap.peer`/`BOOTSTRAP_PEER` the list of peers to bootstrap to (e.g. "1.1.1.1:4000,2.2.2.2:3000")
 
 ## Introduction
 
