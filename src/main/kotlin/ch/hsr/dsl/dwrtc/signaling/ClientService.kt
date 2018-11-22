@@ -12,7 +12,6 @@ import net.tomp2p.peers.PeerAddress
 import java.net.UnknownHostException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.thread
 
 const val SECOND = 1_000.toLong()
@@ -115,21 +114,19 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         logger.info { "add client $sessionId" }
         logger.info { "own peer: ${peer.peerAddress()} " }
 
-        val peerAddresses = bootstrapPeers.map {
+        // Ask all bootstrap servers how they see us.
+        // The first response is used
+        // If no response is received, the peer's peer address is used
+        val peerAddress = bootstrapPeers.map {
             logger.info { "gathering IP from $it" }
             peer.peer().discover().inetAddress(it.ipAddress).ports(it.port).start()
         }.map { it.await() }
                 .filter { it.isSuccess }
-                .map { it.peerAddress() }.toMutableList()
+                .map { it.peerAddress() }.firstOrNull() ?: peer.peerAddress()
 
-        if (peerAddresses.isEmpty()) {
-            logger.info { "no responses from peers, adding peer.peerAddress" }
-            peerAddresses.add(peer.peerAddress())
-        }
+        logger.info { "gathered peer address: $peerAddress" }
 
-        logger.info { "gathered peer addresses: $peerAddresses" }
-
-        val future = Future(peer.put(Number160.createHash(sessionId)).`object`(peerAddresses).start())
+        val future = Future(peer.put(Number160.createHash(sessionId)).`object`(peerAddress).start())
         return Pair(InternalClient(peer, this, sessionId), future)
     }
 
@@ -147,27 +144,9 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         logger.info { "try to find client $sessionId" }
 
         val dhtFuture = peer.get(Number160.createHash(sessionId)).start()
-        val future = GetCustomFuture<IExternalClient, List<PeerAddress>>(dhtFuture) { peerAddresses ->
-            val foundPeerAddress: PeerAddress = if (peerAddresses.contains(peer.peerAddress())) {
-                logger.info { "skipping pinging since this peer is responsible" }
-                peer.peerAddress()
-            } else {
-                val confirmedPeerAddresses = ConcurrentLinkedQueue<PeerAddress>()
-
-                peerAddresses.map {
-                    logger.info { "Pinging $it to see if it responds" }
-                    peer.peer().ping().peerAddress(it).start()
-                }.map {
-                    it.onSuccess { confirmedPeerAddresses.add(it.remotePeer()) }
-                    it
-                }.map { it.awaitListeners() }
-
-                confirmedPeerAddresses.first()
-            }
-
-            logger.info { "First responding peer: $foundPeerAddress" }
-
-            ExternalClient(sessionId, foundPeerAddress, peer)
+        val future = GetCustomFuture<IExternalClient, PeerAddress>(dhtFuture) { peerAddress ->
+            logger.info { "Found peer: $peerAddress" }
+            ExternalClient(sessionId, peerAddress, peer)
         }
 
         future.onFailure { logger.info { "find client with $sessionId failed completely" } }
