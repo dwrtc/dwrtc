@@ -1,7 +1,11 @@
-FROM openjdk:11 as builder
+FROM gradle:jdk11-slim as builder
+USER root
+ENV GRADLE_USER_HOME /app/.gradle
 WORKDIR /app
+COPY *.gradle ./
+RUN gradle -s --no-daemon --console plain build
 COPY . .
-RUN ./gradlew -s --no-daemon --console plain build -x test pack
+RUN gradle -s --no-daemon --console plain build -x test pack
 
 FROM openjdk:11-slim as runner
 WORKDIR /app
