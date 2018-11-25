@@ -1,7 +1,7 @@
 FROM openjdk:11 as builder
 WORKDIR /app
 COPY . .
-RUN ./gradlew --no-daemon build -x test pack
+RUN ./gradlew -s --no-daemon --console plain build -x test pack
 
 FROM openjdk:11-slim as runner
 WORKDIR /app
