@@ -42,7 +42,7 @@ The session which initiates the call is the initiator. Only one person per sessi
 
 ### partnerId
 
-Defines the initiators id if the current session is not the initiator.
+Defines the partners id if the current session is the initiator.
 
 ### webSocketUrl
 
