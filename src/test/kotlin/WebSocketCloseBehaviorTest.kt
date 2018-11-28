@@ -46,13 +46,13 @@ class WebSocketCloseBehaviorTest : WordSpec(), TestListener {
             val message = ClientMessage("SignalingMessage", null, clientOneId, "Hello World")
 
             clientOne.close()
-            clientTwo.send(WsMessage(toJson(message)))  // re-send original message
+            clientTwo.send(WsMessage(toJson(message)))
             val firstTry = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
-
-            Thread.sleep(1000)
-
+            
             clientTwo.send(WsMessage(toJson(message)))  // re-send original message
             val secondTry = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
+
+            Thread.sleep(2_000)
 
             val stillWorkingMessage = ClientMessage("SignalingMessage", null, clientThreeId, "Hello World")
             clientTwo.send(WsMessage(toJson(stillWorkingMessage)))
