@@ -170,7 +170,7 @@ class DWRTC {
    * @param {String} message.id the new ID
    */
   handleWebSocketIdMessage(message) {
-    this.dispatcher.trigger("idMessage", message)
+    this.dispatcher.trigger("id", message.id)
   }
 
   /**
