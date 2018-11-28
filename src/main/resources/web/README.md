@@ -46,7 +46,7 @@ Defines the partners id if the current session is the initiator.
 
 ### webSocketUrl
 
-The web socket url of the DWRTC server to connect to. Check [dwrtc.net](dwrtc.net) for available servers or deploy your own.
+The WebSocket URL of the DWRTC server to connect to. Check [dwrtc.net](dwrtc.net) for available servers or deploy your own.
 
 ## Events
 
