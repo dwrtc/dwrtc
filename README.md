@@ -9,6 +9,8 @@ WebSocket API documentation: https://docs.dwrtc.net/dwrtc/ch.hsr.dsl.dwrtc.webso
 
 Full Kdoc documentation: https://docs.dwrtc.net/
 
+JS documentation: [src/main/resources/web/README.md](src/main/resources/web/README.md)
+
 ## Usage
 
 ```sh

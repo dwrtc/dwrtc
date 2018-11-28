@@ -25,15 +25,20 @@ class SignalingMessage {
   }
 }
 
+/**
+ * DWRTC class to be used with it's corresponding server.
+ * 
+ * Initiates a WebRTC session over a P2P network.
+ */
 class DWRTC {
-  constructor(isInitiator, initialPeerId, webSocketUrl) {
+  constructor(isInitiator, partnerId, webSocketUrl) {
     this.isInitiator = isInitiator
-    if (this.isInitiator) this.otherPeerId = initialPeerId
+    if (this.isInitiator) this.otherPeerId = partnerId
     this.webSocketUrl = webSocketUrl
     this.dispatcher = new EventDispatcher()
 
     console.log(
-      `Started DWRTC with isInitiator: ${isInitiator}, initialPeerId: ${initialPeerId}`
+      `Started DWRTC with isInitiator: ${isInitiator}, partnerId: ${partnerId}`
     )
   }
 
@@ -58,9 +63,6 @@ class DWRTC {
    * Get video / audio stream
    */
   getStream(videoEnabled = true, audioEnabled = true) {
-    // TODO https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
-    // "It's possible for the returned promise to neither resolve nor reject,
-    // as the user is not required to make a choice at all and may simply ignore the request."
     let stream
     try {
       stream = navigator.mediaDevices.getUserMedia({
@@ -168,7 +170,7 @@ class DWRTC {
    * @param {String} message.id the new ID
    */
   handleWebSocketIdMessage(message) {
-    this.dispatcher.trigger("idMessage", message)
+    this.dispatcher.trigger("id", message.id)
   }
 
   /**

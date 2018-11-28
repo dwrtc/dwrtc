@@ -53,7 +53,7 @@ const copyIdToClipboard = event => {
 /**
  * Called when the user is ready. Sets up DWRTC.
  */
-async function startDwrtc(initiator, initialPeerId) {
+async function startDwrtc(initiator, partnerId) {
   const wsProtocol = location.protocol === "https:" ? "wss" : "ws" // in a perfect world, it's always wss
   const webSocketUrl = `${wsProtocol}://${location.host}/ws`
 
@@ -61,7 +61,7 @@ async function startDwrtc(initiator, initialPeerId) {
   hide(elements["input"])
   show(elements["output"])
   elements["output"].classList.add("grid")
-  const dwrtc = new DWRTC(initiator, initialPeerId, webSocketUrl)
+  const dwrtc = new DWRTC(initiator, partnerId, webSocketUrl)
 
   dwrtc.on("started", stream => {
     elements["yourVideo"].srcObject = stream
@@ -78,8 +78,7 @@ async function startDwrtc(initiator, initialPeerId) {
     show(elements["otherVideo"])
   })
 
-  dwrtc.on("idMessage", message => {
-    const id = message.id
+  dwrtc.on("id", id => {
     console.debug(`ID: ${id}`)
     elements["idValue"].value = id
   })
