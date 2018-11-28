@@ -16,7 +16,11 @@ A running [DWRTC server](https://github.com/dwrtc/dwrtc) (check [dwrtc.net](http
     <script src="simple-peer.js"></script>
     <script src="dwrtc.js"></script>
     <script>
-        const dwrtc = new DWRTC(initiator, initialPeerId, webSocketUrl)
+        const initiator = true
+        const initiatorId = null
+        const webSocketUrl = "wss://node1.dwrtc.net/ws"
+
+        const dwrtc = new DWRTC(initiator, initiatorId, webSocketUrl)
 
         dwrtc.on("started", stream => {})
         dwrtc.on("stream", stream => {})
@@ -29,6 +33,20 @@ A running [DWRTC server](https://github.com/dwrtc/dwrtc) (check [dwrtc.net](http
   </body>
 </html>
 ```
+
+## Constructor Arguments
+
+### initiator
+
+The session which initiates the call is the initiator. Only one person per session is allowed to be the initiator.
+
+### initiatorId
+
+Defines the initiators id if the current session is not the initiator.
+
+### webSocketUrl
+
+The web socket url of the DWRTC server to connect to. Check [dwrtc.net](dwrtc.net) for available servers or deploy your own.
 
 ## Events
 
