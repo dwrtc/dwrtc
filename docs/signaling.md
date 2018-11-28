@@ -49,7 +49,7 @@ Note: an [ExternalClient] *can* be on the same server.
 
 ### Message Routing
 
-When an [InternalClient] is created, the [ClientService] registers its session ID in a message dispatcher table. Upon receiving a message in the TomP2P layer, this dispatcher table sends the message to the correct [InternalClient] 
+Whenever an [InternalClient] is created the [ClientService] registers its session ID in a message dispatcher table. The dispatcher then sends all the received messages to the correct [InternalClient] 
 
 
 ### Interfaces
