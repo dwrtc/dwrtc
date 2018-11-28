@@ -17,10 +17,10 @@ A running [DWRTC server](https://github.com/dwrtc/dwrtc) (check [dwrtc.net](http
     <script src="dwrtc.js"></script>
     <script>
         const initiator = true
-        const initiatorId = null
+        const partnerId = null
         const webSocketUrl = "wss://node1.dwrtc.net/ws"
 
-        const dwrtc = new DWRTC(initiator, initiatorId, webSocketUrl)
+        const dwrtc = new DWRTC(initiator, partnerId, webSocketUrl)
 
         dwrtc.on("started", stream => {})
         dwrtc.on("stream", stream => {})
@@ -40,7 +40,7 @@ A running [DWRTC server](https://github.com/dwrtc/dwrtc) (check [dwrtc.net](http
 
 The session which initiates the call is the initiator. Only one person per session is allowed to be the initiator.
 
-### initiatorId
+### partnerId
 
 Defines the initiators id if the current session is not the initiator.
 
