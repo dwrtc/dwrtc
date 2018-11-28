@@ -31,14 +31,14 @@ class SignalingMessage {
  * Initiates a WebRTC session over a P2P network.
  */
 class DWRTC {
-  constructor(isInitiator, initialPeerId, webSocketUrl) {
+  constructor(isInitiator, initiatorId, webSocketUrl) {
     this.isInitiator = isInitiator
-    if (this.isInitiator) this.otherPeerId = initialPeerId
+    if (this.isInitiator) this.otherPeerId = initiatorId
     this.webSocketUrl = webSocketUrl
     this.dispatcher = new EventDispatcher()
 
     console.log(
-      `Started DWRTC with isInitiator: ${isInitiator}, initialPeerId: ${initialPeerId}`
+      `Started DWRTC with isInitiator: ${isInitiator}, initiatorId: ${initiatorId}`
     )
   }
 
