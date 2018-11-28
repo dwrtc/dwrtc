@@ -17,7 +17,7 @@ To connect to other clients, [find clients][ClientService.findClient]. This will
 
 ### Messaging Format
 
-The [Message] class uses a `type` as its discriminator. The availability of other fields depends on the `type`. This allows for a very flexible format that also ensures casting in a type-safe manner.
+The [Message] class uses a `type` as its discriminator. The availability of other fields depends on the `type`. This allows for a very flexible format that also ensures type-safe casting .
 
 Developers using DWRTC can define their own message types with the payload residing in the message body (see XXX)
 
