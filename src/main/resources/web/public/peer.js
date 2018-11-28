@@ -78,8 +78,7 @@ async function startDwrtc(initiator, initialPeerId) {
     show(elements["otherVideo"])
   })
 
-  dwrtc.on("idMessage", message => {
-    const id = message.id
+  dwrtc.on("id", id => {
     console.debug(`ID: ${id}`)
     elements["idValue"].value = id
   })
