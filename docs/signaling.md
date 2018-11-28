@@ -42,7 +42,7 @@ The extension classes that build right on top of TomP2P are available in the the
 ### InternalClient/ExternalClient
 
 An [InternalClient] is created when a new WebSocket session is started. It is able to send and receive messages. 
-An [ExternalClient] is created when an [InternalClient] wants to send messages to it, consisting primarily of the found peer address.
+An [ExternalClient] is created when an [InternalClient] wants to send messages to it.
 An [ExternalClient] can only receive messages. On the other peer, the messages are then routed to a corresponding [InternalClient].
 
 Note: an [ExternalClient] *can* be on the same server.
