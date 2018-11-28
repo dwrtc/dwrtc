@@ -1,7 +1,7 @@
 "use strict"
 
 /**
- * Returns an array of DOM elemets by ID.
+ * Returns an array of DOM elements indexed by ID.
  */
 const getElementsArrayById = ids => {
   const elements = []

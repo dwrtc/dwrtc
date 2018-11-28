@@ -4,7 +4,7 @@ JS helper for the [DWRTC server](https://github.com/dwrtc/dwrtc) to initiate Web
 
 ## Prerequisites
 
-To be able to run dwrtc.js a running [DWRTC server](https://github.com/dwrtc/dwrtc) (check [dwrtc.net](dwrtc.net) for available servers or deploy your own) and [simple-peer](https://github.com/feross/simple-peer) are required.
+A running [DWRTC server](https://github.com/dwrtc/dwrtc) (check [dwrtc.net](https://dwrtc.net) for available servers or deploy your own) and [simple-peer](https://github.com/feross/simple-peer) are required.
 
 ## Usage
 
@@ -59,15 +59,15 @@ Returns the client's ID as soon as the web socket connection is initiated.
 ### webSocketError
 
 ```js
-dwrtc.on("webSocketError", stream => {})
+dwrtc.on("webSocketError", message => {})
 ```
 
-Returns the failing stream. Fires on an error with a web socket connection as a lost connection.
+Returns the error message. Fires on an error with a web socket connection, e.g. a lost connection.
 
 ### error
 
 ```js
-dwrtc.on("error", stream => {})
+dwrtc.on("error", message => {})
 ```
 
-Returns the failing stream. Fires on unknow errors.
+Returns the error message. Fires on unknown errors.
