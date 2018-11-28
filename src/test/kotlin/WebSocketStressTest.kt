@@ -39,6 +39,8 @@ class WebSocketStressTest : WordSpec(), TestListener {
             val clientTwoIdMessage = clientTwo.received().take(1).toList().first().bodyString()
             val clientTwoId = jsonTo<WebSocketIdMessage>(clientTwoIdMessage).id
 
+            Thread.sleep(2_000)
+
             val n = 100
 
             val sentMessages = mutableListOf<WsMessage>()
@@ -51,7 +53,7 @@ class WebSocketStressTest : WordSpec(), TestListener {
                 clientTwo.send(wsMessage)
             }
 
-            Thread.sleep(200) // Give it some time to handle the messages
+            Thread.sleep(2_000) // Give it some time to handle the messages
 
             val receivedMessages = clientOne.received().take(n).toList()
 
