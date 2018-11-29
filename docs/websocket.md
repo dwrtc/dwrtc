@@ -13,7 +13,7 @@ The [Message] format is reused for WebSocket specific messages ([WebSocketErrorM
 The [WebSocketHandler] consists of four main components:
 
 * [WebSocketHandler.clients] is a map of session ID to [InternalClient]s
-* [WebSocketHandler.sessions] is map of session ID to WebSocket sessions
+* [WebSocketHandler.sessions] is a map of session ID to WebSocket sessions
 * [WebSocketHandler.onReceiveMessageFromWebSocket] uses the session ID to get the [InternalClient]. This is then used to send a message through the P2P layer
 * [WebSocketHandler.onReceiveMessageFromSignaling] uses the session ID to get the WebSocket session. This is then used to send the message to the specific WebSocket
 
