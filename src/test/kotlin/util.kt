@@ -20,6 +20,22 @@ fun generateDHT(numberOfPeers: Int): List<PeerDHT> {
     return peers
 }
 
+/** Returns a successful test */
 fun success() {
     true.shouldBeTrue()
+}
+
+/** Sets and resets a system property to ensure nothing else in the same JVM suddenly fails */
+class PropertySetter(private val key: String, private val value: String) {
+    private var oldProperty: String? = System.getProperty(key)
+
+    fun set() {
+        System.setProperty(key, value)
+    }
+
+    fun reset() {
+        if (oldProperty != null) {
+            System.setProperty(key, oldProperty)
+        }
+    }
 }
