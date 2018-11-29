@@ -4,6 +4,7 @@ services:
     build: .
     ports:
     - 7000
+    - 7532
     links:
     - node2
     environment:
@@ -13,6 +14,7 @@ services:
     build: .
     ports:
     - 7000
+    - 7532
     environment:
       PEER_PORT: 7532
       BOOTSTRAP_PEER: node1:7532
