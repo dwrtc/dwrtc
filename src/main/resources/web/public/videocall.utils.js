@@ -20,6 +20,6 @@ const getTurnServers = (hostnames, limit = 1) =>
     states =>
       states
         .slice(0, limit)
-        .map(state => new URL(state.url).hostname)
+        .map(state => `turn:${new URL(state.url).hostname}`)
         .map(hostname => `turn:${hostname}`)
   )
