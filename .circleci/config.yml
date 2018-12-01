@@ -29,5 +29,5 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
         
       - run: ./gradlew build -x test
-      - run: ./gradlew test -i
+      - run: ./gradlew test -i -Dorg.slf4j.simpleLogger.defaultLogLevel=debug
       - run: ./.circleci/sonar-scanner.sh

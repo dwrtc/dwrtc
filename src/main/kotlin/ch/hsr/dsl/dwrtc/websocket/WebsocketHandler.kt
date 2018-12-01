@@ -51,7 +51,7 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         session.idleTimeout = IDLE_TIMEOUT_MS
 
         val (client, clientFuture) = signallingService.addClient(session.id)
-        clientFuture.onSuccess {
+        clientFuture.onComplete {
             sessions[session.id] = session
 
             client.onReceiveMessage { _, messageDto -> onReceiveMessageFromSignaling(messageDto) }
@@ -86,7 +86,7 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
                     logger.error { "message could not be sent to the P2P layer" }
                     session.send(toJson(WebSocketErrorMessage("message could not be sent to the P2P layer")))
                 }
-                sendFuture.onSuccess { logger.debug { "message could be sent to the P2P layer" } }
+                sendFuture.onComplete { logger.debug { "message could be sent to the P2P layer" } }
             }
         }
         future.onNotFound { session.send(toJson(WebSocketErrorMessage("not found"))) }

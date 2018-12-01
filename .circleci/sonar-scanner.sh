@@ -2,7 +2,7 @@
 
 if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
   SONAR_OPTS="-Dsonar.pullrequest.provider=github" \
-    "-Dsonar.pullrequest.github.repository=${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
+    "-Dsonar.pullrequest.github.repository='${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}'" \
     "-Dsonar.pullrequest.github.endpoint=https://api.github.com/" \
     "-Dsonar.pullrequest.branch=${CIRCLE_BRANCH}" \
     "-Dsonar.pullrequest.key=${CIRCLE_PULL_REQUEST##*/}" \
