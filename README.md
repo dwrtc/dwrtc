@@ -17,10 +17,10 @@ JS documentation: [src/main/resources/web/README.md](src/main/resources/web/READ
 $ docker-compose up -d
 $ docker-compose ps
 
-    Name               Command           State            Ports
-------------------------------------------------------------------------
-dwrtc_node1_1   java -jar /app/app.jar   Up      0.0.0.0:PORT1->7000/tcp
-dwrtc_node2_1   java -jar /app/app.jar   Up      0.0.0.0:PORT2->7000/tcp
+    Name               Command           State                        Ports
+-------------------------------------------------------------------------------------------------
+dwrtc_node1_1   java -jar /app/app.jar   Up      0.0.0.0:PORT1->7000/tcp, 0.0.0.0:32770->7532/tcp
+dwrtc_node2_1   java -jar /app/app.jar   Up      0.0.0.0:PORT2->7000/tcp, 0.0.0.0:32768->7532/tcp
 ```
 
 Connect to `localhost:PORT1` for node1 and `localhost:PORT2` for node2 via a web browser.
