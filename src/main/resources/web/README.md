@@ -16,19 +16,20 @@ A running [DWRTC server](https://github.com/dwrtc/dwrtc) (check [dwrtc.net](http
     <script src="simple-peer.js"></script>
     <script src="dwrtc.js"></script>
     <script>
-        const initiator = true
-        const partnerId = null
-        const webSocketUrl = "wss://node1.dwrtc.net/ws"
+      const initiator = true
+      const partnerId = null
+      const webSocketUrl = "wss://node1.dwrtc.net/ws"
+      const iceServers = // Optional, array of RTCICEServer
 
-        const dwrtc = new DWRTC(initiator, partnerId, webSocketUrl)
+      const dwrtc = new DWRTC(initiator, partnerId, webSocketUrl, iceServers)
 
-        dwrtc.on("started", stream => {})
-        dwrtc.on("stream", stream => {})
-        dwrtc.on("id", id => {})
-        dwrtc.on("webSocketError", message => {})
-        dwrtc.on("error", message => {})
+      dwrtc.on("started", stream => {})
+      dwrtc.on("stream", stream => {})
+      dwrtc.on("id", id => {})
+      dwrtc.on("webSocketError", message => {})
+      dwrtc.on("error", message => {})
 
-        await dwrtc.setup()
+      await dwrtc.setup()
     </script>
   </body>
 </html>

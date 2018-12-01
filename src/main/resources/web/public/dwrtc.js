@@ -27,14 +27,15 @@ class SignalingMessage {
 
 /**
  * DWRTC class to be used with it's corresponding server.
- * 
+ *
  * Initiates a WebRTC session over a P2P network.
  */
 class DWRTC {
-  constructor(isInitiator, partnerId, webSocketUrl) {
+  constructor(isInitiator, partnerId, webSocketUrl, iceServers = []) {
     this.isInitiator = isInitiator
     if (this.isInitiator) this.otherPeerId = partnerId
     this.webSocketUrl = webSocketUrl
+    this.iceServers = iceServers
     this.dispatcher = new EventDispatcher()
 
     console.log(
@@ -80,11 +81,16 @@ class DWRTC {
    */
   async startSimplePeer() {
     const stream = await this.getStream()
-
-    this.peer = new window.SimplePeer({
+    const options = {
       initiator: this.isInitiator,
       stream: stream
-    })
+    }
+    if (this.iceServers.length > 0)
+      options["config"] = { iceServers: this.iceServers }
+
+    console.debug("SimplePeer Options: " + JSON.stringify(options))
+
+    this.peer = new window.SimplePeer(options)
 
     this.peer.on("signal", data => {
       // Peer wants to send signaling data
