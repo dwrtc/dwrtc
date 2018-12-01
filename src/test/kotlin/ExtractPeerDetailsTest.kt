@@ -4,6 +4,7 @@ import ch.hsr.dsl.dwrtc.signaling.PeerConnectionDetails
 import ch.hsr.dsl.dwrtc.signaling.extractPeerDetails
 import io.kotlintest.matchers.collections.shouldBeEmpty
 import io.kotlintest.matchers.collections.shouldContainExactly
+import io.kotlintest.shouldThrow
 import io.kotlintest.specs.WordSpec
 
 class ExtractionTest : WordSpec() {
@@ -13,6 +14,11 @@ class ExtractionTest : WordSpec() {
             val extractPeerDetails = extractPeerDetails(emptyList())
             "yield an empty peer list" {
                 extractPeerDetails.shouldBeEmpty()
+            }
+        }
+        "a malformed string" should {
+            "throw an exception" {
+                shouldThrow<NumberFormatException> { extractPeerDetails(listOf("noColonsHere")) }
             }
         }
         "a null list" should {

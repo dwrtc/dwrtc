@@ -22,7 +22,7 @@ data class PeerConnectionDetails(val ipAddress: InetAddress, val port: Int) {
 fun extractPeerDetails(peers: List<String>?): List<PeerConnectionDetails> {
     if (peers == null) return emptyList()
     return peers.map { it ->
-        val split = it.split(":")
+        val split = it.split(":", limit = 2)
         PeerConnectionDetails(split.first(), split.last().toInt())
     }
 }
