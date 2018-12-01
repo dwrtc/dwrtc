@@ -48,6 +48,10 @@ class WebSocketBehaviorTest : WordSpec(), TestListener {
             clientTwo.send(WsMessage(toJson(invalidIdMessage)))
             val invalidIdReply = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
 
+            val nullIdMessage = ClientMessage("SignalingMessage", null, null, "Hello World")
+            clientTwo.send(WsMessage(toJson(nullIdMessage)))
+            val nullIdReply = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
+
             "be able to send messages" {
                 receivedMessage.messageBody.shouldBe("Hello World")
             }
@@ -56,6 +60,9 @@ class WebSocketBehaviorTest : WordSpec(), TestListener {
             }
             "get an error message when sending to an unknown client" {
                 invalidIdReply.error.shouldBe("not found")
+            }
+            "get an error message when not setting the recipient ID client" {
+                nullIdReply.error.shouldBe("Recipient ID not set, aborting")
             }
         }
     }

@@ -74,6 +74,11 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
         val messageDto = jsonTo<ClientMessage>(message)
         messageDto.senderSessionId = session.id
 
+        if (messageDto.recipientSessionId == null) {
+            session.send(toJson(WebSocketErrorMessage("Recipient ID not set, aborting")))
+            return
+        }
+
         val future = signallingService.findClient(messageDto.recipientSessionId!!)
         future.onGet { recipient ->
             clients[session.id]?.let { it ->
