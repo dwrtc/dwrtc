@@ -35,6 +35,7 @@ window.onload = () => {
     if (elements["connectToSessionForm"].checkValidity()) {
       // Allow HTML5 form validation to take place
       event.preventDefault()
+      console.log("otherPeerId Value: " + elements["otherPeerId"].value)
       startDwrtc(true, elements["otherPeerId"].value)
       hide(elements["idMessage"])
     }
@@ -56,12 +57,16 @@ const copyIdToClipboard = event => {
 async function startDwrtc(initiator, partnerId) {
   const wsProtocol = location.protocol === "https:" ? "wss" : "ws" // in a perfect world, it's always wss
   const webSocketUrl = `${wsProtocol}://${location.host}/ws`
+  const iceServers = getTurnServers([
+    "node1.dwrtc.net",
+    "node2.dwrtc.net"
+  ]).then(servers => [{ urls: servers, username: "user", credential: "dwrtc" }])
 
   console.log("Start DWRTC")
   hide(elements["input"])
   show(elements["output"])
   elements["output"].classList.add("grid")
-  const dwrtc = new DWRTC(initiator, partnerId, webSocketUrl)
+  const dwrtc = new DWRTC(initiator, partnerId, webSocketUrl, await iceServers)
 
   dwrtc.on("started", stream => {
     elements["yourVideo"].srcObject = stream
