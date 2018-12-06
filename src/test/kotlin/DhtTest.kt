@@ -12,7 +12,7 @@ class DhtTest : WordSpec(), TestListener {
     override fun testCaseOrder() = TestCaseOrder.Random // make sure tests are not dependent on each other
 
     companion object {
-        const val DATA_KEY = "DATA_KEY"
+        private const val DATA_KEY = "DATA_KEY"
         val DATA_KEY_HASH = Number160.createHash(DATA_KEY)!!
         const val DATA_VALUE = "DATA_VALUE"
     }
