@@ -94,8 +94,7 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
 
     /** Creates a peer and bootstraps with a given IP/port pair. Optionally, set the port this peer uses.
      *
-     * @param bootstrapIp the peer's IP to bootstrap with
-     * @param bootstrapPort the peer's port to bootstrap with
+     * @param bootstrapPeers the list of [PeerConnectionDetails] to bootstrap with
      * @param peerPort the port this peer uses
      */
     constructor(bootstrapPeers: List<PeerConnectionDetails>, peerPort: Int?) : this(peerPort) {
