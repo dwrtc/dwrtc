@@ -11,7 +11,7 @@ else
   SONAR_OPTS=""
 fi
 
-./gradlew sonarqube \
+./gradlew -x test sonarqube \
  -Dsonar.projectKey="${SONAR_KEY}" \
  -Dsonar.organization="${SONAR_ORGANZATION}" \
  -Dsonar.host.url="${SONAR_HOST}" \
