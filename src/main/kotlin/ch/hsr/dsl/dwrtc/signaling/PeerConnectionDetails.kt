@@ -19,6 +19,11 @@ data class PeerConnectionDetails(val ipAddress: InetAddress, val port: Int) {
     constructor(ipAddressString: String, port: Int) : this(InetAddress.getByName(ipAddressString), port)
 }
 
+/**
+ * Extract a list of [PeerConnectionDetails] of a configuration string.
+ *
+ * @param peers List of Strings. Strings formatted as "HOST_ADDRESS:PORT"
+ */
 fun extractPeerDetails(peers: List<String>?): List<PeerConnectionDetails> {
     if (peers == null) return emptyList()
     return peers.map { it ->

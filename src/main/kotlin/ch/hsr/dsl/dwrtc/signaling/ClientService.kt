@@ -14,6 +14,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
+/** Base unit for sleep time */
 const val SECOND = 1_000.toLong()
 
 /** Connection to the P2P network */

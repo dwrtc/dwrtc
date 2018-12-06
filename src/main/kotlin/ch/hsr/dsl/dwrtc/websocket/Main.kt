@@ -9,6 +9,7 @@ import mu.KotlinLogging
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 
+/** Sub path (to the resources directory) of the web site */
 const val WEB_SUB_PATH = "/web/public/"
 
 /** Main start point. Fires up the Webserver. */
