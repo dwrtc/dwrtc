@@ -118,7 +118,7 @@ class WebSocketHandler(app: Javalin, private val signallingService: ClientServic
      */
     private fun onReceiveMessageFromSignaling(message: ClientMessage) {
         logger.info { "sending message $message" }
-        sessions[message.recipientSessionId]?.let {
+        sessions[message.recipientSessionId]?.remote.sendStringByFuture(toJson(message))
             it.remote.sendStringByFuture(toJson(message))
         }
     }
