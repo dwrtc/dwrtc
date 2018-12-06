@@ -23,7 +23,7 @@ dwrtc_node1_1   java -jar /app/app.jar   Up      0.0.0.0:PORT1->7000/tcp, 0.0.0.
 dwrtc_node2_1   java -jar /app/app.jar   Up      0.0.0.0:PORT2->7000/tcp, 0.0.0.0:32768->7532/tcp
 ```
 
-Connect to `localhost:PORT1` for node1 and `localhost:PORT2` for node2 via a web browser. You can also connect to the TomP2P ports (32768/32770 in this case) to bootstrap any instance running outside of this network.
+Connect to `localhost:PORT1` for node1 and `localhost:PORT2` for node2 via a web browser. You can also connect to the TomP2P ports (`32768`/`32770` in this case) to bootstrap any instance running outside of this network.
 
 ## Options
 
