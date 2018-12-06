@@ -1,6 +1,6 @@
 # dwrtc.js
 
-JS helper for the [DWRTC server](https://github.com/dwrtc/dwrtc) to initiate WebRTC connections over a P2P network.
+JS helper for the [DWRTC server](https://github.com/dwrtc/dwrtc) to initiate WebRTC connections over a P2P network. Can be used if you don't want to implement the whole [API](https://docs.dwrtc.net/dwrtc/ch.hsr.dsl.dwrtc.websocket/) by yourself.
 
 ## Prerequisites
 
