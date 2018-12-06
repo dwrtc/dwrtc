@@ -14,7 +14,7 @@ fun generateDHT(numberOfPeers: Int): List<PeerDHT> {
     val firstPeer = buildNewPeer()
     for (i in 0..numberOfPeers) {
         val peer = buildNewPeer()
-        peer.peer().bootstrap().peerAddress(firstPeer.peerAddress()).start().awaitListeners()
+        peer.peer().bootstrap().peerAddress(firstPeer.peerAddress()).start().await()
         peers.add(peer)
     }
     return peers
