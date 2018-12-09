@@ -203,11 +203,11 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
                         .start()
                 future?.onSuccess {
                     logger.info { "bootstrapping with $details on thread ${Thread.currentThread()} successful" }
-                    sleepTime = 30 * SECOND
+                    sleepTime = 60 * SECOND
                 }
                 future?.onFailure {
                     logger.info { "bootstrapping with $details on thread ${Thread.currentThread()} failed: $it" }
-                    sleepTime = 10 * SECOND
+                    sleepTime = 120 * SECOND
                 }
                 future?.awaitListeners()
                 Thread.sleep(sleepTime)
@@ -222,20 +222,18 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         fun dispatchMessage(clientMessage: ClientMessage, senderPeerAddress: PeerAddress) {
             val recipientSessionId = clientMessage.recipientSessionId!!
             val senderSessionId = clientMessage.senderSessionId!!
+
             emitterMap[recipientSessionId]?.let {
                 logger.info { "message accepted, found emitter for $recipientSessionId" }
                 it(ExternalClient(senderSessionId, senderPeerAddress, peer), clientMessage)
-            } ?: run {
-                logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
-            }
+            } ?: logger.info { "message discarded (no registered emitter for session id $recipientSessionId" }
         }
 
         /** Only dispatch a message if it's actually one of our own messages */
-        fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Any {
+        fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress) {
             logger.info { "got message $messageDto" }
-            return if (messageDto is ClientMessage) {
+            if (messageDto is ClientMessage) {
                 dispatchMessage(messageDto, senderPeerAddress)
-                messageDto
             } else {
                 logger.info { "message discarded (not a message dto)" }
             }
