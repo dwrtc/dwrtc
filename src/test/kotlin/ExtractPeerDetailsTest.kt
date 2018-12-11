@@ -16,9 +16,14 @@ class ExtractionTest : WordSpec() {
                 extractPeerDetails.shouldBeEmpty()
             }
         }
-        "a malformed string" should {
+        "a malformed string with no colons" should {
             "throw an exception" {
                 shouldThrow<NumberFormatException> { extractPeerDetails(listOf("noColonsHere")) }
+            }
+        }
+        "a malformed string with too many colons" should {
+            "throw an exception" {
+                shouldThrow<NumberFormatException> { extractPeerDetails(listOf("too:5000:6000")) }
             }
         }
         "a null list" should {
