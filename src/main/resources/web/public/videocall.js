@@ -1,54 +1,38 @@
 "use strict"
 
 const elements = getElementsArrayById([
-  "connectNormal",
-  "otherPeerId",
-  "connectToSession",
-  "connectToSessionForm",
-  "input",
-  "output",
-  "idMessage",
-  "idValue",
-  "idCopy",
-  "yourVideo",
-  "otherVideo",
-  "errorOverlay",
-  "errorMessage"
+  "user-stream",
+  "partner-stream",
+  "start-session-button",
+  "join-session-button",
+  "start-overlay",
+  "join-form",
+  "peer-id-input",
+  "copy-peer-id-input",
+  "id-overlay",
+  "copy-peer-id-button",
+  "error-overlay"
 ])
-
-const showError = message => {
-  show(elements["errorOverlay"])
-  elements["errorOverlay"].classList.add("fade-in")
-  elements["errorOverlay"].textContent = message
-}
 
 /**
  * Onload. Setup the page interactions
  */
 window.onload = () => {
-  elements["connectNormal"].onclick = event => {
+  elements["start-session-button"].onclick = event => {
     event.preventDefault()
     startDwrtc(false)
-    hide(elements["idMessage"])
+    hide(elements["start-overlay"])
   }
-  elements["connectToSession"].onclick = event => {
-    if (elements["connectToSessionForm"].checkValidity()) {
-      // Allow HTML5 form validation to take place
-      event.preventDefault()
-      console.log("otherPeerId Value: " + elements["otherPeerId"].value)
-      startDwrtc(true, elements["otherPeerId"].value)
-      hide(elements["idMessage"])
+
+  elements["join-session-button"].onclick = event => {
+    event.preventDefault()
+    if (elements["join-form"].checkValidity()) {
+      const partnerId = elements["peer-id-input"].value
+      console.log(`partner id: ${partnerId}`)
+      startDwrtc(true, partnerId)
+      hide(elements["start-overlay"])
     }
   }
-  elements["idCopy"].onclick = copyIdToClipboard
-  show(elements["input"])
-}
-
-const copyIdToClipboard = event => {
-  event.preventDefault()
-  elements["idValue"].select()
-  document.execCommand("copy")
-  elements["idCopy"].textContent = "Copied!"
 }
 
 /**
@@ -62,37 +46,42 @@ async function startDwrtc(initiator, partnerId) {
     "node2.dwrtc.net"
   ]).then(servers => [{ urls: servers, username: "user", credential: "dwrtc" }])
 
-  console.log("Start DWRTC")
-  hide(elements["input"])
-  show(elements["output"])
-  elements["output"].classList.add("grid")
+  console.debug("initialize dwrtc")
   const dwrtc = new DWRTC(initiator, partnerId, webSocketUrl, await iceServers)
 
   dwrtc.on("started", stream => {
-    elements["yourVideo"].srcObject = stream
-    elements["yourVideo"].muted = true
-    elements["yourVideo"].play()
-    show(elements["idMessage"])
+    console.debug("got user stream")
+    elements["user-stream"].srcObject = stream
+    elements["user-stream"].muted = true
+    elements["user-stream"].play()
+    elements["user-stream"].style.opacity = 1
   })
 
   dwrtc.on("stream", stream => {
-    console.log("got  stream")
-    hide(elements["idMessage"])
-    elements["otherVideo"].srcObject = stream
-    elements["otherVideo"].play()
-    show(elements["otherVideo"])
+    console.debug("got partner stream")
+    hide(elements["id-overlay"])
+    elements["partner-stream"].srcObject = stream
+    elements["partner-stream"].play()
+    elements["partner-stream"].style.opacity = 1
   })
 
   dwrtc.on("id", id => {
-    console.debug(`ID: ${id}`)
-    elements["idValue"].value = id
+    console.debug(`got id message: ${id}`)
+    elements["copy-peer-id-input"].value = id
+    elements["copy-peer-id-button"].onclick = event => {
+      elements["copy-peer-id-input"].select()
+      document.execCommand("copy")
+      elements["copy-peer-id-button"].textContent = "Copied!"
+    }
+    show(elements["id-overlay"])
   })
 
   dwrtc.on("webSocketError", message => {
     const error = message.error
     console.error(error)
     const errorSuffix =
-      "Kindly reload the page and try again with another input"
+      "Kindly reload the page and try again with another partner input"
+
     showError(`${error}. ${errorSuffix}.`)
   })
 
@@ -102,4 +91,15 @@ async function startDwrtc(initiator, partnerId) {
   })
 
   await dwrtc.setup()
+}
+
+const showError = message => {
+  removeAllChildren(elements["error-overlay"])
+  const p = document.createElement("p")
+  p.appendChild(document.createTextNode(`Error: ${message}`))
+  elements["error-overlay"].appendChild(p)
+  hide(elements["id-overlay"])
+  // TODO hide partner stream? or add background to error div so you can properly read it?
+  // Then again, an error may mean that you can still talk to each other, just not signal anymore
+  show(elements["error-overlay"])
 }
