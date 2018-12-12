@@ -10,10 +10,8 @@ import ch.hsr.dsl.dwrtc.websocket.WebSocketErrorMessage
 import ch.hsr.dsl.dwrtc.websocket.WebSocketHandler
 import ch.hsr.dsl.dwrtc.websocket.WebSocketIdMessage
 import io.javalin.Javalin
-import io.kotlintest.TestCaseOrder
+import io.kotlintest.*
 import io.kotlintest.extensions.TestListener
-import io.kotlintest.fail
-import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 import mu.KLogging
 import org.http4k.client.WebsocketClient
@@ -32,52 +30,55 @@ class WebSocketCloseBehaviorTest : WordSpec(), TestListener {
 
     init {
         "two WebSocket clients where some close" should {
-            WebSocketHandler(app, service)
-            val clientOne = WebsocketClient.blocking(wsUri)
-            val clientTwo = WebsocketClient.blocking(wsUri)
-            val clientThree = WebsocketClient.blocking(wsUri)
-            val clientOneIdMessage = clientOne.received().take(1).toList().first().bodyString()
-            val clientOneId = jsonTo<WebSocketIdMessage>(clientOneIdMessage).id
-            val clientTwoIdMessage = clientTwo.received().take(1).toList().first().bodyString()
-            val clientTwoId = jsonTo<WebSocketIdMessage>(clientTwoIdMessage).id
-            val clientThreeIdMessage = clientThree.received().take(1).toList().first().bodyString()
-            val clientThreeId = jsonTo<WebSocketIdMessage>(clientThreeIdMessage).id
+            eventually(5.seconds) {
+                WebSocketHandler(app, service)
+                val clientOne = WebsocketClient.blocking(wsUri)
+                val clientTwo = WebsocketClient.blocking(wsUri)
+                val clientThree = WebsocketClient.blocking(wsUri)
+                val clientOneIdMessage = clientOne.received().take(1).toList().first().bodyString()
+                val clientOneId = jsonTo<WebSocketIdMessage>(clientOneIdMessage).id
+                val clientTwoIdMessage = clientTwo.received().take(1).toList().first().bodyString()
+                val clientTwoId = jsonTo<WebSocketIdMessage>(clientTwoIdMessage).id
+                val clientThreeIdMessage = clientThree.received().take(1).toList().first().bodyString()
+                val clientThreeId = jsonTo<WebSocketIdMessage>(clientThreeIdMessage).id
 
-            val message = ClientMessage("SignalingMessage", null, clientOneId, "Hello World")
+                val message = ClientMessage("SignalingMessage", null, clientOneId, "Hello World")
 
-            clientOne.close()
-            clientTwo.send(WsMessage(toJson(message)))
-            val firstTry = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
-            
-            clientTwo.send(WsMessage(toJson(message)))  // re-send original message
-            val secondTry = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
+                clientOne.close()
+                clientTwo.send(WsMessage(toJson(message)))
+                val firstTry = jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
 
-            Thread.sleep(2_000)
+                clientTwo.send(WsMessage(toJson(message)))  // re-send original message
+                val secondTry =
+                    jsonTo<WebSocketErrorMessage>(clientTwo.received().take(1).toList().first().bodyString())
 
-            val stillWorkingMessage = ClientMessage("SignalingMessage", null, clientThreeId, "Hello World")
-            clientTwo.send(WsMessage(toJson(stillWorkingMessage)))
-            val receivedMessageString = clientThree.received().take(1).toList().first().bodyString()
-            val receivedMessage = jsonTo<ClientMessage>(receivedMessageString)
+                Thread.sleep(2_000)
+
+                val stillWorkingMessage = ClientMessage("SignalingMessage", null, clientThreeId, "Hello World")
+                clientTwo.send(WsMessage(toJson(stillWorkingMessage)))
+                val receivedMessageString = clientThree.received().take(1).toList().first().bodyString()
+                val receivedMessage = jsonTo<ClientMessage>(receivedMessageString)
 
 
 
-            "get an error message when sending to a client that closed its session" {
-                // the first try can either be a error message, or not found
-                when {
-                    firstTry.error == "message could not be sent to the P2P layer" -> {
-                        success()
+                "get an error message when sending to a client that closed its session" {
+                    // the first try can either be a error message, or not found
+                    when {
+                        firstTry.error == "message could not be sent to the P2P layer" -> {
+                            success()
+                        }
+                        firstTry.error == "not found" -> {
+                            success()
+                        }
+                        else -> fail("Was neither expected message")
                     }
-                    firstTry.error == "not found" -> {
-                        success()
-                    }
-                    else -> fail("Was neither expected message")
+                    // the second try HAS to be not found
+                    secondTry.error.shouldBe("not found")
                 }
-                // the second try HAS to be not found
-                secondTry.error.shouldBe("not found")
-            }
-            "still work after some close" {
-                receivedMessage.senderSessionId.shouldBe(clientTwoId)
-                receivedMessage.messageBody.shouldBe("Hello World")
+                "still work after some close" {
+                    receivedMessage.senderSessionId.shouldBe(clientTwoId)
+                    receivedMessage.messageBody.shouldBe("Hello World")
+                }
             }
         }
     }
