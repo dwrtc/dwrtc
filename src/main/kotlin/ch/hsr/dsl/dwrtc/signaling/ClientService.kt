@@ -230,12 +230,14 @@ class ClientService constructor(peerPort: Int? = findFreePort()) : IClientServic
         }
 
         /** Only dispatch a message if it's actually one of our own messages */
-        fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress) {
+        fun tryDispatchingMessage(messageDto: Any?, senderPeerAddress: PeerAddress): Boolean? {
             logger.info { "got message $messageDto" }
-            if (messageDto is ClientMessage) {
+            return if (messageDto is ClientMessage) {
                 dispatchMessage(messageDto, senderPeerAddress)
+                true
             } else {
                 logger.info { "message discarded (not a message dto)" }
+                false
             }
         }
 
