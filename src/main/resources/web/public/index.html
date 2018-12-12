@@ -1,45 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DWRTC</title>
-    <link rel="stylesheet" href="https://cdn.rawgit.com/kimeiga/bahunya/css/bahunya-0.1.2.css" />
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
 
     <script src="simplepeer-9.0.0.min.js" defer></script>
     <script src="dwrtc.js" defer></script>
     <script src="ping.js" defer></script>
     <script src="videocall.utils.js" defer></script>
-    <script src="videocall.js" defer></script> 
-</head>
+    <script src="videocall.js" defer></script>
+  </head>
 
-<body>
-    <div id="input" hidden>
-        <h1>Welcome to DWRTC</h1>
-        <p>Below, you can either start a new session, or join an existing one</p>
-        <hr>
-        <form>
-            <button type="submit" id="connectNormal">Start new session</button>
-        </form>
+  <body>
+    <div class="streams">
+      <video class="stream" id="user-stream"></video>
+      <video class="stream" id="partner-stream"></video>
+    </div>
 
-        <form id="connectToSessionForm">
-            <label for="otherPeerId">Other Peer ID</label>
-            <input id="otherPeerId" size="36" required><!-- current IDs are 36 chars long -->
-            <button type="submit" id="connectToSession">Connect to existing session</button>
-        </form>
+    <div class="overlay" id="start-overlay">
+      <h1>Video Call using DWRTC</h1>
+      <p>Hey there! Lets start a new session or join one.</p>
+      <button id="start-session-button">Start</button>
+      <p>or</p>
+      <form id="join-form">
+        <input id="peer-id-input" size="36" placeholder="Partner ID" required />
+        <button type="submit" id="join-session-button">Join</button>
+      </form>
     </div>
-    <div id="output" hidden>
-        <video id="otherVideo" hidden class="top"></video>
-        <p class="top" id="idMessage">Tell your partner to connect to <input id="idValue" value="…" size="36"></input>
-            <button type="submit" id="idCopy">Copy</button>
-        </p>
-        <video id="yourVideo"></video>
-    </div>
-    <div id="errorOverlay" hidden>
-        <p>Oops, an error has occured: <span id="errorMessage">…</span></p>
-    </div>
-</body>
 
+    <div class="overlay" id="id-overlay">
+      <p>Send the following ID to your partner:</p>
+      <input id="copy-peer-id-input" />
+      <button id="copy-peer-id-button">Copy</button>
+    </div>
+
+    <div class="overlay" id="error-overlay"></div>
+  </body>
 </html>
