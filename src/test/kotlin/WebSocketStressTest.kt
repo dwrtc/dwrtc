@@ -10,8 +10,10 @@ import ch.hsr.dsl.dwrtc.websocket.WebSocketHandler
 import ch.hsr.dsl.dwrtc.websocket.WebSocketIdMessage
 import io.javalin.Javalin
 import io.kotlintest.TestCaseOrder
+import io.kotlintest.eventually
 import io.kotlintest.extensions.TestListener
 import io.kotlintest.matchers.collections.shouldContainAll
+import io.kotlintest.seconds
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 import mu.KLogging
@@ -31,36 +33,34 @@ class WebSocketStressTest : WordSpec(), TestListener {
 
     init {
         "two WebSocket clients sending many messages" should {
-            WebSocketHandler(app, service)
-            val clientOne = WebsocketClient.blocking(wsUri)
-            val clientTwo = WebsocketClient.blocking(wsUri)
-            val clientOneIdMessage = clientOne.received().take(1).toList().first().bodyString()
-            val clientOneId = jsonTo<WebSocketIdMessage>(clientOneIdMessage).id
-            val clientTwoIdMessage = clientTwo.received().take(1).toList().first().bodyString()
-            val clientTwoId = jsonTo<WebSocketIdMessage>(clientTwoIdMessage).id
+            eventually(5.seconds) {
+                WebSocketHandler(app, service)
+                val clientOne = WebsocketClient.blocking(wsUri)
+                val clientTwo = WebsocketClient.blocking(wsUri)
+                val clientOneIdMessage = clientOne.received().take(1).toList().first().bodyString()
+                val clientOneId = jsonTo<WebSocketIdMessage>(clientOneIdMessage).id
+                val clientTwoIdMessage = clientTwo.received().take(1).toList().first().bodyString()
+                val clientTwoId = jsonTo<WebSocketIdMessage>(clientTwoIdMessage).id
 
-            Thread.sleep(2_000)
+                val n = 100
 
-            val n = 100
+                val sentMessages = mutableListOf<WsMessage>()
 
-            val sentMessages = mutableListOf<WsMessage>()
+                for (i in 1..n) {
+                    // we explicitly set the senderSessionId, so the list matches exactly
+                    val message = ClientMessage("SignalingMessage", clientTwoId, clientOneId, n.toString())
+                    val wsMessage = WsMessage(toJson(message))
+                    sentMessages.add(wsMessage)
+                    clientTwo.send(wsMessage)
+                }
+                
+                val receivedMessages = clientOne.received().take(n).toList()
 
-            for (i in 1..n) {
-                // we explicitly set the senderSessionId, so the list matches exactly
-                val message = ClientMessage("SignalingMessage", clientTwoId, clientOneId, n.toString())
-                val wsMessage = WsMessage(toJson(message))
-                sentMessages.add(wsMessage)
-                clientTwo.send(wsMessage)
-            }
-
-            Thread.sleep(2_000) // Give it some time to handle the messages
-
-            val receivedMessages = clientOne.received().take(n).toList()
-
-            "receive all the messages" {
-                receivedMessages.size.shouldBe(sentMessages.size)
-                receivedMessages.size.shouldBe(n)
-                receivedMessages.shouldContainAll(sentMessages)
+                "receive all the messages" {
+                    receivedMessages.size.shouldBe(sentMessages.size)
+                    receivedMessages.size.shouldBe(n)
+                    receivedMessages.shouldContainAll(sentMessages)
+                }
             }
         }
     }

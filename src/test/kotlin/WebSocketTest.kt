@@ -8,9 +8,11 @@ import ch.hsr.dsl.dwrtc.websocket.WebSocketHandler
 import ch.hsr.dsl.dwrtc.websocket.WebSocketIdMessage
 import io.javalin.Javalin
 import io.kotlintest.TestCaseOrder
+import io.kotlintest.eventually
 import io.kotlintest.extensions.TestListener
 import io.kotlintest.matchers.string.shouldContain
 import io.kotlintest.matchers.string.shouldNotBeBlank
+import io.kotlintest.seconds
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.WordSpec
 import mu.KLogging
@@ -29,27 +31,29 @@ class WebSocketTest : WordSpec(), TestListener {
 
     init {
         "the initial message" should {
-            WebSocketHandler(app, service)
-            val client = WebsocketClient.blocking(wsUri)
-            val firstMessageString = client.received().take(1).toList().first().bodyString()
+            eventually(5.seconds) {
+                WebSocketHandler(app, service)
+                val client = WebsocketClient.blocking(wsUri)
+                val firstMessageString = client.received().take(1).toList().first().bodyString()
 
-            "be accessible under the specified port" {
-                firstMessageString.shouldNotBeBlank()
-            }
+                "be accessible under the specified port" {
+                    firstMessageString.shouldNotBeBlank()
+                }
 
-            "be a WebSocketIdMessage" {
-                firstMessageString.shouldContain("WebSocketIdMessage")
-                firstMessageString.shouldContain("id")
-            }
+                "be a WebSocketIdMessage" {
+                    firstMessageString.shouldContain("WebSocketIdMessage")
+                    firstMessageString.shouldContain("id")
+                }
 
-            "have a correct id" {
-                val firstMessage = jsonTo<WebSocketIdMessage>(firstMessageString)
-                firstMessage.id.length.shouldBe(36)
-            }
+                "have a correct id" {
+                    val firstMessage = jsonTo<WebSocketIdMessage>(firstMessageString)
+                    firstMessage.id.length.shouldBe(36)
+                }
 
-            "have the correct type" {
-                val firstMessage = jsonTo<WebSocketIdMessage>(firstMessageString)
-                firstMessage.type.shouldBe("WebSocketIdMessage")
+                "have the correct type" {
+                    val firstMessage = jsonTo<WebSocketIdMessage>(firstMessageString)
+                    firstMessage.type.shouldBe("WebSocketIdMessage")
+                }
             }
         }
     }
