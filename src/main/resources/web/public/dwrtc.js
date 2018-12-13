@@ -39,7 +39,8 @@ class DWRTC {
     this.dispatcher = new EventDispatcher()
 
     console.log(
-      `Started DWRTC with isInitiator: ${isInitiator}, partnerId: ${partnerId}`
+      `Started DWRTC with isInitiator: ${isInitiator}, partnerId: ${partnerId},
+      ice servers: ${JSON.stringify(iceServers)}`
     )
   }
 

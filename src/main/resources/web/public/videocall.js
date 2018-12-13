@@ -41,10 +41,9 @@ window.onload = () => {
 async function startDwrtc(initiator, partnerId) {
   const wsProtocol = location.protocol === "https:" ? "wss" : "ws" // in a perfect world, it's always wss
   const webSocketUrl = `${wsProtocol}://${location.host}/ws`
-  const iceServers = getTurnServers([
-    "node1.dwrtc.net",
-    "node2.dwrtc.net"
-  ]).then(servers => [{ urls: servers, username: "user", credential: "dwrtc" }])
+  const iceServers = getIceServers(["node1.dwrtc.net", "node2.dwrtc.net"]).then(
+    servers => [{ urls: servers, username: "user", credential: "dwrtc" }]
+  )
 
   console.debug("initialize dwrtc")
   const dwrtc = new DWRTC(initiator, partnerId, webSocketUrl, await iceServers)
