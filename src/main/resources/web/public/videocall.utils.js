@@ -20,7 +20,7 @@ const removeAllChildren = e => {
 /**
  * Returns an array of RTCIceServers ordered by response time
  */
-const getTurnServers = (hostnames, limit = 1) =>
+const getIceServers = (hostnames, limit = 1) =>
   urlPing(hostnames.map(hostname => `https://${hostname}/px.png`)).then(
     states =>
       ["turn", "stun"]
