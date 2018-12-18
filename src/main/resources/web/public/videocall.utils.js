@@ -23,7 +23,7 @@ const removeAllChildren = e => {
 const getIceServers = (hostnames, limit = 1) =>
   urlPing(hostnames.map(hostname => `https://${hostname}/px.png`)).then(
     states =>
-      ["turn", "stun"]
+      ["turn", "turns", "stun"]
         .map(type =>
           states
             .slice(0, limit)
