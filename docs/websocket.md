@@ -54,7 +54,7 @@ All these incoming message types have to be handled. They are distinguishable by
 * `WebSocketErrorMessage`. Tells the implementation that something went wrong
   * `type: String`. Static value `WebSocketErrorMessage`
   * `error: String`. The error message
-* `ClientMessage`. Incoming, client-defined messages
+* `ClientMessage`. Incoming, application-defined messages
   * `type: String`. The message type as defined by the developer (see above)
   * `senderSessionId: String`. The sender' session ID. Can be used to reply to messages
   * `recipientSessionId: String`. The recipient's session ID. This should be the current session ID!
