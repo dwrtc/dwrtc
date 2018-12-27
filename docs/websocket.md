@@ -24,7 +24,7 @@ The WebSocket session IDs, are reused for the user's session ID. The ID is assum
 
 ## API Doc
 
-When connected to the WebSocket, an implementation can send or receive the following messages.
+When connected to the WebSocket, an implementation can send or receive the following messages (as JSON objects)
 
 ### Send
 
@@ -33,9 +33,20 @@ When connected to the WebSocket, an implementation can send or receive the follo
   * `recipientSessionId: String`. The recipient's session ID. Used for routing.
   * `messageBody: String`. The free-form message body. To the transport layer, this is a black box. May therefore include stringified JSON.
   
+Example:
+
+```
+{
+	"type": "CustomMessage",
+	"recipientSessionId": "ABCDEF",
+	"messageBody": "Hi ABCDEF!"
+}
+```
+  
 ### Receive
 
-All these incoming message types have to be handled. They are distinguishable by their `type` field.
+All these incoming message types have to be handled. They are distinguishable by their `type` field. They are sent as JSON objects.
+
 ``
 * `WebSocketIdMessage`. Includes the session ID.
   * `type: String`. Static value `WebSocketIdMessage`
